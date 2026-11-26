@@ -4,6 +4,7 @@ import json
 import zlib
 import base64
 import numpy as np
+from spectral_units import input_absorbance
 
 def decode(value,scale):
     raw=zlib.decompress(base64.b64decode(value,validate=True))
@@ -34,8 +35,6 @@ def example_csv(grid, example):
 
 def match_uploaded_example(data, unit="absorbance"):
     """Recognize only the bundled numerical spectra; never replay arbitrary uploads."""
-    if unit!="absorbance":
-        return None
     data=np.asarray(data,dtype=float)
     grid,examples=load_examples()
     if data.shape!=(len(grid),2) or not np.isfinite(data).all():
@@ -43,7 +42,11 @@ def match_uploaded_example(data, unit="absorbance"):
     data=data[np.argsort(data[:,0])]
     if not np.allclose(data[:,0],grid,rtol=0,atol=1e-9):
         return None
+    try:
+        signal=input_absorbance(data[:,1],unit)
+    except ValueError:
+        return None
     for example in examples.values():
-        if np.allclose(data[:,1],example["signal"],rtol=0,atol=1e-10):
+        if np.allclose(signal,example["signal"],rtol=0,atol=1e-10):
             return grid,example
     return None
