@@ -42,6 +42,11 @@ order=np.argsort(rx);rx=rx[order]
 rv=ref[ids].to_numpy(float)[order]
 assert np.all(np.diff(rx)>0)
 # Use the intersection of native spectral ranges, no extrapolation.
+valid=np.isfinite(rv).all(axis=1)
+blocks=np.split(np.flatnonzero(valid),np.flatnonzero(np.diff(np.flatnonzero(valid))>1)+1)
+block=max(blocks,key=len)
+assert len(block)>=11,'No complete common spectral interval'
+rx=rx[block];rv=rv[block]
 lo=max(rx.min(),max(q.wavenumber.min() for q in queries))
 hi=min(rx.max(),min(q.wavenumber.max() for q in queries))
 grid=np.sort(queries[0].wavenumber.to_numpy(float))
