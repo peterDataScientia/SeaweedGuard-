@@ -19,17 +19,18 @@ assert len(ids)==459 and set(ids)==set(meta.index)
 assert len(truth)==232 and set(matches.query_id)==set(truth.index)
 assert matches.groupby('query_id').size().eq(5).all()
 assert set(matches.library_id).issubset(ids)
-def label(s):
-    s=str(s).strip().lower()
-    if s.startswith('nylon') or s.startswith('polyamide') or s.startswith('poly(amid'): return 'Nylon'
-    if s in ('pp','polypropylene','poly(propylene)'): return 'PP'
-    if s in ('ps','polystyrene','poly(styrene)'): return 'PS'
-    if s in ('pvc','polyvinylchloride','polyvinyl chloride','poly(vinyl chloride)'): return 'PVC'
-    return 'Other'
-# Keep non-target material classes separate during SVM training.
-def train_label(s):
-    v=label(s)
-    return v if v!='Other' else 'Other:'+str(s).strip().lower()
+def reference_label(row):
+    def norm(v):
+        return str(v).strip().lower()
+    m,c,i=map(norm,(row['material'],row['material_class'],row['spectrum_identity']))
+    if 'aramid' in i or 'kevlar' in m or 'terephthalamide' in m:
+        return 'Other:aramid'
+    if c=='polyamides' and (m.startswith(('nylon','polyamide')) or i.startswith(('nylon','polyamide','pa '))):
+        return 'Nylon'
+    if m in ('pp','polypropylene','poly(propylene)'): return 'PP'
+    if m in ('ps','polystyrene','poly(styrene)'): return 'PS'
+    if m in ('pvc','polyvinylchloride','polyvinyl chloride','poly(vinyl chloride)'): return 'PVC'
+    return 'Other:'+(c if m in ('nan','','none','other','other plastic','other material') else m)
 def prep(x):
     x=savgol_filter(np.asarray(x,dtype=float),11,2,deriv=1,axis=1)
     x-=x.mean(axis=1,keepdims=True)
@@ -60,7 +61,7 @@ for q in queries:
     assert np.all(np.diff(q.wavenumber)>0)
     rows.append(np.interp(grid,q.wavenumber,q.absorbance))
 b=prep(np.array(rows))
-y=meta.loc[ids,'material'].map(train_label).to_numpy()
+y=meta.loc[ids].apply(reference_label,axis=1).to_numpy()
 t=truth.provisional_label.map(lambda x:'Nylon' if str(x).startswith('Nylon') else x)
 assert set(t)=={'Nylon','PP','PS','PVC'}
 sim=b@a.T
@@ -69,8 +70,10 @@ p1=y[best]
 p2=SVC(C=10,gamma='scale').fit(a,y).predict(b)
 top=matches.sort_values(['query_id','match_val','library_id'],ascending=[True,False,True]).drop_duplicates('query_id').set_index('query_id').loc[truth.index]
 def collapse(x): return np.array(['Other' if str(v).startswith('Other:') else v for v in x])
-res=pd.DataFrame({'truth':t,'condition':truth.condition,'OpenSpecy':top.material.map(label),'SG_1NN':collapse(p1),'SG_SVM':collapse(p2),'SG_reference_id':np.array(ids)[best],'SG_similarity':sim.max(axis=1),'OpenSpecy_similarity':top.match_val},index=truth.index)
+res=pd.DataFrame({'truth':t,'condition':truth.condition,'OpenSpecy':collapse(top.apply(reference_label,axis=1)),'SG_1NN':collapse(p1),'SG_SVM':collapse(p2),'SG_reference_id':np.array(ids)[best],'SG_similarity':sim.max(axis=1),'OpenSpecy_similarity':top.match_val},index=truth.index)
 labels=['Nylon','PP','PS','PVC']
+common=common/'E14_corrected'
+common.mkdir(exist_ok=True)
 metrics=[]
 for name in ['OpenSpecy','SG_1NN','SG_SVM']:
     pred=res[name]
@@ -81,6 +84,7 @@ for name in ['SG_1NN','SG_SVM']:
     aok=res[name].eq(t);bok=res.OpenSpecy.eq(t)
     x=int((aok&~bok).sum());z=int((~aok&bok).sum())
     paired.append({'method':name,'both_correct':int((aok&bok).sum()),'SG_only':x,'OpenSpecy_only':z,'both_incorrect':int((~aok&~bok).sum()),'exact_mcnemar_p':binomtest(x,x+z,.5).pvalue if x+z else 1.0})
+meta.assign(mapped_label=meta.apply(reference_label,axis=1)).reset_index()[['sample_name','material','material_class','spectrum_identity','mapped_label']].to_csv(common/'reference_label_mapping.csv',index=False)
 res.to_csv(common/'paired_predictions.csv')
 pd.DataFrame(metrics).to_csv(common/'metrics.csv',index=False)
 pd.DataFrame(paired).to_csv(common/'paired_tests.csv',index=False)
