@@ -1,60 +1,185 @@
-import streamlit as st
-import pandas as pd
+"""SeaweedGuard v0.2.0 — spectral workstation. Frozen E18 engine unchanged."""
+import hashlib
+from io import BytesIO
 from pathlib import Path
-from frozen_engine import load_model, screen, SIM, MARGIN
+from datetime import datetime
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+from frozen_engine import load_model, screen, preprocess, CLASSES, SIM, MARGIN
 
-st.set_page_config(page_title="SeaweedGuard",page_icon="🌊",layout="wide")
-st.sidebar.title("SeaweedGuard")
-st.sidebar.caption("v0.1.0 | Research prototype")
-page=st.sidebar.radio("Workspace",["Dashboard","Spectrum screening","Batch screening","Farm monitoring","Validation"])
-st.sidebar.caption("ATR-FTIR • Evidence-led polymer screening")
-st.title(page)
-st.caption("SeaweedGuard | Microplastic monitoring research")
-if page=="Dashboard":
-    st.info("Screen individual measured ATR-FTIR spectra for four target polymer classes. This is not a food-safety or seaweed-tissue diagnostic.")
-    a,b,c=st.columns(3)
-    a.metric("Reference spectra",459);b.metric("External ATR spectra",3832);c.metric("External target accuracy","85.37%")
-    st.subheader("Workflow")
-    st.write("Collect and isolate particles → acquire ATR-FTIR spectrum → screen → expert review → record field observations.")
-    st.write("Supported targets: Nylon, PP, PS and PVC. Independent external evaluation covers PP and PS only.")
-elif page in ("Spectrum screening","Batch screening"):
-    st.warning("Similarity is not a probability. Accepted candidates require appropriate experimental confirmation. Not validated for direct seaweed-tissue analysis.")
-    bundle=Path(__file__).parent/"models/frozen_model.npz"
-    uploaded=st.file_uploader("Load authorised E18 model bundle (.npz)",type=["npz"]) if not bundle.exists() else None
-    if not bundle.exists() and uploaded is None:
-        st.info("Supply the frozen model bundle from the project Drive. Reference-derived data are not bundled in the public repository pending licence review.")
-        st.stop()
-    try: model=load_model(bundle if bundle.exists() else uploaded)
-    except Exception as e: st.error(str(e));st.stop()
-    unit=st.selectbox("Measured intensity units",["absorbance","percent absorbance","percent transmittance"])
-    st.caption("CSV must contain a header and exactly two numeric columns: wavenumber (cm⁻¹), intensity. Do not use Raman spectra.")
-    batch=page=="Batch screening"
-    files=st.file_uploader("Spectrum CSV files" if batch else "Spectrum CSV",type=["csv"],accept_multiple_files=batch)
-    files=files if batch else ([files] if files else [])
-    if files:
-        rows=[]
-        for f in files:
-            try:
-                r=screen(pd.read_csv(f).to_numpy(float),model,unit)
-                rows.append(dict(file=f.name,**{k:v for k,v in r.items() if k!="signal"}))
-                if not batch:
-                    a,b,c=st.columns(3);a.metric("Candidate",r["candidate"]);b.metric("Similarity",f'{r["similarity"]:.4f}');c.metric("Class margin",f'{r["margin"]:.4f}')
-                    st.write(r["status"]);st.line_chart(pd.DataFrame({"absorbance":r["signal"]},index=model[0]),x_label="Wavenumber (cm⁻¹)")
-            except Exception as e: rows.append(dict(file=f.name,status="Invalid input",error=str(e)))
-        result=pd.DataFrame(rows);st.dataframe(result,hide_index=True)
-        st.download_button("Download screening report",result.to_csv(index=False),"seaweedguard_screening.csv","text/csv")
-    st.caption(f"Frozen thresholds: similarity ≥ {SIM}; margin ≥ {MARGIN}. Region 1500–1700 cm⁻¹ excluded.")
+BASE=Path(__file__).resolve().parent
+st.set_page_config(page_title="SeaweedGuard | Spectral Workstation",page_icon="🌊",layout="wide",initial_sidebar_state="expanded")
+st.markdown((BASE/"assets/workstation.css").read_text(),unsafe_allow_html=True)
+for key,default in {"runs":{},"history":[],"farm":[]}.items():
+    if key not in st.session_state: st.session_state[key]=default
+
+@st.cache_resource
+def open_bundle(raw):
+    return load_model(BytesIO(raw))
+
+with st.sidebar:
+    st.markdown('<div class="sg-brand">Seaweed<span>Guard</span></div><div class="sg-kicker">SPECTRAL WORKSTATION / 02</div>',unsafe_allow_html=True)
+    st.divider()
+    page=st.radio("WORKSPACE",["Analyzer","Batch analysis","Reference library","Farm monitoring","History","Settings","About"],index=0)
+    st.divider()
+    st.caption("MODEL CONNECTION")
+    installed=BASE/"models/frozen_model.npz"
+    uploaded=None if installed.exists() else st.file_uploader("Connect model",type=["npz"],key="model",help="Select the authorised E18 frozen model bundle.")
+    raw=installed.read_bytes() if installed.exists() else uploaded.getvalue() if uploaded else None
+    model=None
+    model_error=None
+    if raw is not None:
+        try: model=open_bundle(raw)
+        except Exception as exc: model_error=str(exc)
+    if model is not None: st.success("Engine connected · 459 references")
+    elif model_error: st.error("Model rejected: "+model_error)
+    else: st.caption("No model connected")
+    st.caption("v0.2.0  /  E18 FROZEN")
+
+ready=model is not None
+model_id=hashlib.sha256(raw).hexdigest() if ready else None
+titles={"Analyzer":("01 / SPECTRAL WORKSPACE","Spectrum analyzer"),"Batch analysis":("02 / HIGH-THROUGHPUT","Batch analysis"),"Reference library":("03 / REFERENCE SYSTEM","Reference library"),"Farm monitoring":("04 / FIELD WORKSPACE","Farm monitoring"),"History":("05 / SESSION RECORDS","Analysis history"),"Settings":("06 / CONFIGURATION","Instrument settings"),"About":("07 / DOCUMENTATION","Scientific documentation")}
+k,t=titles[page]
+status="ENGINE CONNECTED" if ready else "MODEL OFFLINE"
+st.markdown(f'<div class="sg-header"><div><div class="sg-kicker">{k}</div><div class="sg-title">{t}</div></div><div class="{"sg-online" if ready else "sg-offline"}">● {status}</div></div>',unsafe_allow_html=True)
+
+def plot_spectrum(x,series,ylabel,mask=False):
+    fig=go.Figure()
+    colors=["#23d5c6","#e6ae66"]
+    for i,(label,values) in enumerate(series):
+        fig.add_trace(go.Scatter(x=x,y=values,name=label,mode="lines",line={"color":colors[i%2],"width":1.8},connectgaps=False))
+    if mask: fig.add_vrect(x0=1500,x1=1700,fillcolor="#7890a8",opacity=.12,line_width=0,annotation_text="Masked")
+    fig.update_layout(template="plotly_dark",paper_bgcolor="#0c1a29",plot_bgcolor="#0c1a29",height=420,margin=dict(l=58,r=20,t=22,b=55),font=dict(color="#c6dae9",size=12),legend=dict(orientation="h",y=1.02,x=0),xaxis=dict(title="Wavenumber (cm⁻¹)",autorange="reversed",gridcolor="#233b50"),yaxis=dict(title=ylabel,gridcolor="#233b50"),hovermode="x unified",dragmode="zoom")
+    return fig
+
+def analyze_file(f,unit):
+    r=screen(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),model,unit)
+    g,a,y,ids=model
+    scores=(preprocess(r["signal"],g)@a.T)[0]
+    order=np.argsort(-scores,kind="stable")[:10]
+    ranking=pd.DataFrame({"Rank":np.arange(1,len(order)+1),"Polymer":y[order],"Similarity":scores[order],"Reference ID":ids[order]})
+    j=int(np.flatnonzero(ids==r["reference_id"])[0])
+    m=~((g>=1500)&(g<1700))
+    query=np.full(len(g),np.nan);ref=query.copy()
+    query[m]=preprocess(r["signal"],g)[0];ref[m]=a[j]
+    row={"file":f.name,"time":datetime.now().isoformat(timespec="seconds"),**{k:v for k,v in r.items() if k!="signal"}}
+    return {"row":row,"signal":r["signal"],"grid":g,"query":query,"ref":ref,"ranking":ranking}
+
+def empty_view():
+    st.markdown('<div class="sg-empty"><div><strong>SPECTRAL VIEWER</strong>Import a spectrum to begin acquisition</div></div>',unsafe_allow_html=True)
+
+def export_rows(rows,key):
+    if rows:
+        df=pd.DataFrame(rows)
+        st.dataframe(df,hide_index=True,use_container_width=True)
+        st.download_button("Export CSV",df.to_csv(index=False).encode(),"seaweedguard_results.csv","text/csv",key=key)
+
+if page in ("Analyzer","Batch analysis"):
+    batch=page=="Batch analysis"
+    left,right=st.columns([1,2.6],gap="large")
+    with left:
+        with st.container(border=True):
+            st.markdown("**ACQUISITION**")
+            unit=st.selectbox("Intensity units",["absorbance","percent absorbance","percent transmittance"])
+            files=st.file_uploader("Import FTIR CSV" if not batch else "Import FTIR spectra",type=["csv"],accept_multiple_files=batch,key="spectra_"+page)
+            files=files if batch else ([files] if files else [])
+            st.caption("2 numeric columns · cm⁻¹ · header")
+            st.caption("ATR-FTIR only")
+            run_key=hashlib.sha256(repr((page,model_id,unit,[(f.name,hashlib.sha256(f.getvalue()).hexdigest()) for f in files])).encode()).hexdigest()
+            if st.button("▶  Analyze batch" if batch else "▶  Analyze spectrum",type="primary",use_container_width=True,disabled=not (ready and files)):
+                results=[];errors=[];logs=[]
+                p=st.progress(0,text="Starting analysis")
+                for i,f in enumerate(files):
+                    try:
+                        item=analyze_file(f,unit)
+                        results.append(item);st.session_state.history.append(item["row"])
+                        logs.append(f"OK | {f.name} | {item['row']['status']}")
+                    except Exception as exc:
+                        errors.append({"file":f.name,"status":"Invalid input","error":str(exc)})
+                        logs.append(f"ERROR | {f.name} | {exc}")
+                    p.progress((i+1)/len(files),text=f"Processed {i+1} / {len(files)}")
+                st.session_state.runs[page]={"key":run_key,"results":results,"errors":errors,"logs":logs}
+            if not ready: st.caption("Connect the E18 model in the sidebar.")
+        with st.container(border=True):
+            st.markdown("**ENGINE PARAMETERS**")
+            st.caption("SG derivative · 11 / 2")
+            st.caption(f"Similarity ≥ {SIM:.6f}")
+            st.caption(f"Class margin ≥ {MARGIN:.6f}")
+            st.caption("Mask 1500–1700 cm⁻¹")
+    run=st.session_state.runs.get(page,{})
+    current=run if run.get("key")==run_key else {}
+    results=current.get("results",[])
+    errors=current.get("errors",[])
+    with right:
+        if not batch:
+            if results:
+                item=results[0];r=item["row"]
+                cols=st.columns(3)
+                cols[0].metric("POLYMER CANDIDATE",r["candidate"])
+                cols[1].metric("SIMILARITY",f"{r['similarity']:.4f}")
+                cols[2].metric("CLASS MARGIN",f"{r['margin']:.4f}")
+                if r["accepted"]: st.success("Accepted candidate · confirmation as required")
+                elif r["candidate"]=="Other": st.info("Non-target candidate")
+                else: st.warning("Tentative candidate · review required")
+                a,b=st.tabs(["Measured spectrum","Reference overlay"])
+                with a:
+                    fig=plot_spectrum(item["grid"],[("Measured",item["signal"])],"Absorbance")
+                    st.plotly_chart(fig,use_container_width=True,config={"displaylogo":False,"scrollZoom":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_spectrum","scale":3}},key="rawplot")
+                with b:
+                    fig=plot_spectrum(item["grid"],[("Query",item["query"]),("Nearest reference",item["ref"])],"Normalized first derivative",True)
+                    st.plotly_chart(fig,use_container_width=True,config={"displaylogo":False,"scrollZoom":True},key="overlay")
+                    st.download_button("Export overlay data",pd.DataFrame({"wavenumber":item["grid"],"query":item["query"],"reference":item["ref"]}).to_csv(index=False),"overlay.csv","text/csv")
+                st.markdown("**RANKED REFERENCE MATCHES**")
+                st.dataframe(item["ranking"],hide_index=True,use_container_width=True,column_config={"Similarity":st.column_config.NumberColumn(format="%.4f")})
+                export_rows([r],"single_export")
+            else:
+                empty_view()
+                if errors: st.error(errors[0]["error"])
+                else: st.caption("Awaiting acquisition")
+        else:
+            rows=[x["row"] for x in results]
+            cols=st.columns(3)
+            cols[0].metric("PROCESSED",len(rows)+len(errors))
+            cols[1].metric("ACCEPTED",sum(r["accepted"] for r in rows))
+            cols[2].metric("INPUT ERRORS",len(errors))
+            if rows or errors: export_rows(rows+errors,"batch_export")
+            else: st.caption("Import spectra and start batch analysis.")
+        with st.expander("Processing console",expanded=bool(current)):
+            st.code("\n".join(current.get("logs",[])) or "IDLE | Awaiting analysis",language=None)
+        st.caption("Similarity is not probability. Screening of isolated measured spectra; confirm candidates where required.")
+elif page=="Reference library":
+    if ready:
+        g,a,y,ids=model
+        df=pd.DataFrame({"Reference ID":ids,"Polymer class":y})
+        st.metric("Reference spectra",len(df))
+        st.bar_chart(df["Polymer class"].value_counts())
+        filter_class=st.selectbox("Polymer class",["All"]+sorted(set(y)))
+        st.dataframe(df if filter_class=="All" else df[df["Polymer class"]==filter_class],hide_index=True,use_container_width=True)
+    else: st.info("Connect the frozen model to inspect the reference inventory.")
 elif page=="Farm monitoring":
-    st.caption("Session-only observations; these do not establish contamination source or intervention efficacy.")
-    with st.form("monitor"):
-        site=st.text_input("Farm / sample ID");stage=st.selectbox("Stage",["Cultivation","Harvest","Drying","Transport","Processing"]);date=st.date_input("Observation date");note=st.text_area("Observation or possible contamination source");submit=st.form_submit_button("Record")
-    if "records" not in st.session_state: st.session_state.records=[]
-    if submit and site.strip(): st.session_state.records.append(dict(sample=site,stage=stage,date=str(date),observation=note))
-    if st.session_state.records:
-        table=pd.DataFrame(st.session_state.records);st.dataframe(table,hide_index=True);st.download_button("Export monitoring log",table.to_csv(index=False),"farm_log.csv","text/csv")
+    with st.form("farm"):
+        c,d=st.columns(2)
+        with c: sample=st.text_input("Farm / sample ID");date=st.date_input("Sampling date")
+        with d: stage=st.selectbox("Stage",["Cultivation","Harvest","Drying","Transport","Processing"]);location=st.text_input("Site")
+        note=st.text_area("Observation");save=st.form_submit_button("Save observation",type="primary")
+    if save and sample.strip():
+        st.session_state.farm.append({"sample":sample,"date":str(date),"stage":stage,"site":location,"observation":note})
+    if st.session_state.farm:
+        st.dataframe(pd.DataFrame(st.session_state.farm),hide_index=True,use_container_width=True)
+        st.download_button("Export farm log",pd.DataFrame(st.session_state.farm).to_csv(index=False),"farm_log.csv","text/csv")
+    st.caption("Session-only records.")
+elif page=="History":
+    export_rows(st.session_state.history,"history_export")
+    if not st.session_state.history: st.caption("No analyses recorded this session.")
+elif page=="Settings":
+    st.table(pd.DataFrame({"Parameter":["Model","References","Grid points","SG window","Polynomial order","Mask (cm⁻¹)","Similarity","Class margin"],"Value":["E18 frozen","459","750","11","2","1500–1700",str(SIM),str(MARGIN)]}))
+    st.caption("Read-only scientific parameters.")
+    if ready: st.code(model_id,language=None)
 else:
-    st.subheader("E18 | MicroPlastiX external evaluation")
-    st.write("Frozen model; DOI: 10.22000/1820. Spectrum-level metrics, not independent specimen counts.")
-    st.table(pd.DataFrame({"Metric":["PP/PS target identification","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
-    st.warning("Nylon and PVC were absent from this external dataset. No direct seaweed-tissue validation. Accepted target accuracy excludes non-target false acceptances.")
-    st.write("Non-target refers to polymers outside the four supported classes, not necessarily non-plastics.")
+    st.markdown("**E18 / MicroPlastiX external validation**")
+    st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
+    st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
+    st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.0 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
