@@ -78,3 +78,12 @@ tryCatch({
   if(status!=0) stop("Common-reference Python stage failed with code ",status)
   message("E13 common-reference stage completed.")
 },error=function(e){message("E13 incomplete: ",conditionMessage(e));writeLines(conditionMessage(e),file.path(out,"E13_error.txt"))})
+
+# E18 acquisition is independent of E13 success and does not alter frozen models.
+tryCatch({
+  python <- Sys.which("python3")
+  stopifnot(nzchar(python))
+  status <- system2(python,c(shQuote(file.path(script_dir,"external_acquire.py")),shQuote(out)))
+  if(status!=0) stop("E18 acquisition failed with code ",status)
+  message("E18 acquisition audit completed; external scoring pending.")
+},error=function(e){message("E18 incomplete: ",conditionMessage(e))})
