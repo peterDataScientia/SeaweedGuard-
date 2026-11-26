@@ -1,13 +1,28 @@
 from pathlib import Path
 from streamlit.testing.v1 import AppTest
+from demo_examples import load_examples,demo_status
 
 APP=Path(__file__).resolve().parents[1]/"app.py"
 
-def test_analyzer_starts_without_model():
+def test_example_data():
+    g,examples=load_examples()
+    assert len(g)==750
+    assert [x["candidate"] for x in examples.values()]==["PP","PS","PP","Other"]
+    assert [x["accepted"] for x in examples.values()]==[True,True,False,False]
+
+def test_demo_without_model():
     at=AppTest.from_file(str(APP),default_timeout=30).run()
     assert not at.exception
     assert at.sidebar.radio[0].value=="Analyzer"
-    assert at.button[0].disabled
+    assert at.button(key="demo_run").disabled
+    at.button[0].click().run()
+    assert not at.exception
+    at.button(key="demo_run").click().run()
+    assert not at.exception
+    assert at.metric[0].value=="PP"
+    at.button(key="demo_clear").click().run()
+    assert not at.exception
+    assert at.button(key="demo_run").disabled
 
 def test_navigation_without_model():
     at=AppTest.from_file(str(APP),default_timeout=30).run()
