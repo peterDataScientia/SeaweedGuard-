@@ -1,5 +1,4 @@
-# SeaweedGuard
-## Evidence-guided microplastic screening and prevention for sustainable seaweed farming
+# SeaweedGuard: Intelligent Microplastic Screening for Seaweed Quality Monitoring
 
 **Africa's Blue Futures Hackathon 2027 | Concept note v0.0.1 | 26 November 2026**  
 **Proposed challenge:** Microplastics in seaweed (based on the circulated call; exact catalogue wording and submission requirements to be checked).
