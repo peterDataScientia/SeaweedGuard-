@@ -5,3 +5,4 @@ scikit-learn
 joblib
 streamlit
 pytest
+plotly>=5.24
