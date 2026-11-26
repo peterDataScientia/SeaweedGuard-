@@ -23,4 +23,25 @@
 .sg-foot{color:#7c98ac;font-size:.72rem;border-top:1px solid #253c51;padding-top:12px;margin-top:24px;letter-spacing:.04em}
 .sg-empty{display:grid;place-items:center;height:340px;border:1px solid #253c51;border-radius:10px;background:repeating-linear-gradient(0deg,transparent,transparent 39px,#1d3447 40px),repeating-linear-gradient(90deg,#0c1a29,#0c1a29 59px,#1d3447 60px);color:#9bb7c9;text-align:center}
 .sg-empty strong{display:block;color:#d5edf5;font-size:1.1rem;margin-bottom:6px}
+
+/* Compact workstation: no fixed-height clipping, responsive to smaller screens. */
+.block-container{padding-top:3.1rem;padding-bottom:.4rem;max-width:none;padding-left:1.25rem;padding-right:1.25rem}
+[data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"]{gap:.42rem}
+[data-testid="stHorizontalBlock"]{gap:.65rem}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"]{gap:.35rem}
+[data-testid="stSidebar"] [role="radiogroup"] label{padding:4px 7px}
+[data-testid="stSidebar"] hr{margin:.35rem 0}
+.sg-header{padding:0 0 7px;margin-bottom:2px}
+.sg-title{font-size:1.42rem}
+.sg-kicker{font-size:.60rem}
+.sg-online,.sg-offline{padding:4px 8px;font-size:.65rem}
+[data-testid="stMetric"]{padding:7px 10px;min-height:0}
+[data-testid="stMetricValue"]{font-size:1.45rem;line-height:1.15}
+[data-testid="stMetricLabel"]{font-size:.72rem}
+[data-testid="stVerticalBlockBorderWrapper"]{padding:8px!important}
+.stButton>button[kind="primary"]{min-height:36px}
+[data-testid="stFileUploaderDropzone"]{padding:8px}
+.sg-empty{height:330px}
+.sg-foot{margin-top:6px;padding-top:5px}
+@media(max-width:900px){.block-container{padding-left:.8rem;padding-right:.8rem}.sg-header{flex-wrap:wrap;gap:6px}}
 </style>
