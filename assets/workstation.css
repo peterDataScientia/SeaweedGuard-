@@ -44,4 +44,14 @@
 .sg-empty{height:330px}
 .sg-foot{margin-top:6px;padding-top:5px}
 @media(max-width:900px){.block-container{padding-left:.8rem;padding-right:.8rem}.sg-header{flex-wrap:wrap;gap:6px}}
+
+/* Reclaim the unused upper band; keep Streamlit's native toolbar accessible. */
+@media(min-width:1100px){
+  .block-container{padding-top:1rem}
+  .sg-header{padding-right:220px;min-height:2.65rem}
+}
+[data-testid="stSidebarUserContent"]{padding-top:.35rem}
+[data-testid="stSidebarContent"]{padding-top:0}
+.sg-empty{height:450px}
+@media(max-width:1099px){.block-container{padding-top:2.7rem}.sg-header{padding-right:0}}
 </style>
