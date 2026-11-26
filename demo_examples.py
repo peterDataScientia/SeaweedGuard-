@@ -26,3 +26,24 @@ def demo_status(result):
     if result["accepted"]: return "Accepted candidate · confirmation as required"
     if result["candidate"]=="Other": return "Non-target candidate"
     return "Tentative candidate · review required"
+
+
+def example_csv(grid, example):
+    import pandas as pd
+    return pd.DataFrame({"wavenumber":grid,"absorbance":example["signal"]}).to_csv(index=False).encode("utf-8")
+
+def match_uploaded_example(data, unit="absorbance"):
+    """Recognize only the bundled numerical spectra; never replay arbitrary uploads."""
+    if unit!="absorbance":
+        return None
+    data=np.asarray(data,dtype=float)
+    grid,examples=load_examples()
+    if data.shape!=(len(grid),2) or not np.isfinite(data).all():
+        return None
+    data=data[np.argsort(data[:,0])]
+    if not np.allclose(data[:,0],grid,rtol=0,atol=1e-9):
+        return None
+    for example in examples.values():
+        if np.allclose(data[:,1],example["signal"],rtol=0,atol=1e-10):
+            return grid,example
+    return None
