@@ -1,0 +1,57 @@
+{
+  "grid_start": 1002.845,
+  "grid": "eNpjYBDkh0EhfkEMSKwYZSqxqyNeJXa7BYjUT33/jNpDOB4FKFI5NGKclNAgLrXTRqUgkSFHK5UjITTo70cAB/Jd6Q==",
+  "examples": [
+    {
+      "name": "PP | sample 01",
+      "file": "VLFR_04-PP_bio_ATR_daf8ffa4.csv",
+      "truth": "PP",
+      "treatment": "bio",
+      "candidate": "PP",
+      "similarity": 0.9659934082784968,
+      "margin": 0.1153765709130352,
+      "accepted": true,
+      "reference_id": "a374ca08a21660d27eb433cc1bbd953e",
+      "data": "eNodlGlslGUUhc+snXam0IUCLUuxFFkqihtIEDQqEFJAkKBEA2piUH8YjUb8gzExUTC4IEFirCsRSayigKYuUSFABIuxAhKKgRIagrQE6EJpZzrf8ZmZNzPzLnc599wlU9QerPPn7nKhUlqsxzRVT+sFLdF8LdUrWqa1+lSr9ZCe1wY1cNqiefrWO32CdcbHfdQZj9Y0rdQazdGga7SZ90SwJijzPC/yBm/1e6xtPuRTPuYGv+wv3c7psDt9zUv1r9f7gE+621Kvw6rF+zRlXK0GNzmqala9wtrN/m59plioObQ63Ojv/EZ0TmpLrPvSrX0fZFu8WOu1U0d0UIf1PvsWHQ1NjpSrMbQiuiH6U+i14EJQl1mZfj1dNbgpmOuPfJbI3/Zlt4Blii54wDM0Q8uJZTUsrNGbekJ71KQXtRdmnlKdLnrQEd2mEZquGxTXDrf6tGcjPU7veowdtAT7vNkb/QVxf+KfvQkfJ/yXLxBtjxPqcoeLVKZizVVCp73Pb8HRV97jPl90L+uaK4j+itPg6XEMqV4iL8F3jyvJUi93BQrA0e8schWwHqBdpkJuTCaLdQmcQiehq+yiinKXUJ8L1JmXjyimtMt12SFV8psklpTK8dvplIYo6+EgFZ8UvvrRuUpmcvbi2JaKlMPYi+wgeRJ7YWUADKVIB3gchn6FIjrvcQIUHtIg6QNxAokocucd10j1uFhXwFOEpy73g6mLyJMarhCoy3kvAMF1uh2Nr9E9BFdJHaFe2nQ2uJ8a7Qya0U2CaBL4CkATy/OQAXEYKxn8pGEljr1K4o/yGkE+g+UYmeiHgwTWMyApRT8JglykxfCZpTOquA0Tw1hdD55qnSOGHmxmPZRvNXoVcDKMjGQ8Au4qsVqCXBh/hdgfrg5P5ZTLVpVqWBPooQVUzLF89eQYLUKyBt1aTdYt6C7UbHpvvp7V46xXqevt2iqrPlQabo10xz4OZ7LPOdC27NogGV4a+cZXg7jiTnqJZoUawxsjtdFV0Qdj4XhbsGJgf39D/13pZ7LLwg/HN4WDzE2DQ7MjMwfTkwcfzb4UTPQqOvMkbOSyl9Jo4l+usflqGQoPtURUSl+UwOBYzlGNpxNK4Xk8PVCDxs3cl7MrUZVu5L8OpqZqFO8JemU8VmK6R3doJjFPh7NFynX1k2SsADtzye0k4k5yN4pMH6cDEpqC12LN0n2wM4HJZGrrEU1EYiY2Z2FnBJoL0clx9gCo6zktwH+d7sRuMb76/V9+0jR7l3+A63V05fdMm3b68Ue/4w+9lxmww43U1H63+W9mSgvrVx/h3MRk+J3JcIJzM316iqzvoptb6ZF/0P8DmxEd8G/+he8576Z693g7FTGAZhM2u/P90cGMPMlbEsQH+J9PBQmZDnq3RmOIrI33QrhK0WVdHgJ7ZfqTt1C+kofA6xlwVHHbTn8E2A1j9xo+e30v/BxEuz6vm/Yoav0S/E3Q/4dgoAA="
+    },
+    {
+      "name": "PS | sample 02",
+      "file": "VLFR_05-PS_bio_ATR_4aac6f56.csv",
+      "truth": "PS",
+      "treatment": "bio",
+      "candidate": "PS",
+      "similarity": 0.9623550271190128,
+      "margin": 0.2290362876001614,
+      "accepted": true,
+      "reference_id": "1145b216ddc2f60c22ae0358c70c2361",
+      "data": "eNollH1olWUYxq/3nO1sZx51nqlTt8wVTQdZKkmKTcmiBilkafQhfdAfkkkfVEoQkkUgRRgRhRpRENoHYmmQVH8oEZWgmVlbuel0ztlczp1zttnOOe/V733j5f14nud+7ue6rvu638FpP3qOvtHSoCsYSGz3ouLO0ou+R49qs3arU7ODXdrkvvBJv+Hvfcx1qtWwx6nk8/7a3XwtVpvWa5P2qSV4LHjY74Wv+qLt5/WSjoZvh23e5Kf9uJ/xp/7VJ1zyBZ9z3jWqUc45FxhL0SirFjVrlJwTuFrIvFhN6vMf7Fmidr/pYc9WK3P1ulkbdSNYFugVL/Uqr/HHPu4xL2flbq3TGm3RIT0XVCbmJe9PtlWsTJ0uTR1cWOrwVM3SHr0QLEuuq9pfc11udWEwXKupML5Vc7WQ53I9oCH/7nbwXoH1LC3SSh3W60HJzZ4ZHEkkk5nytuKqMO9W3aHrObNJDbpB85QHvdQPln3e4698yk/4C+/1ET8Ly/PcVTwzauQK4JGE7yesf4u2l5iPlBhzVvN1m1Zook66E53bfdQ9aNaBEkmFnq6rYNGqJbpFPeh3gmpEkT9zbh6VqlR0PSfUE3W7HtRSXfB3/smH/Se5jvsH/+1RpzgtTwXyfFeApAy6EnfR1briSo34/1FSUeQI31ficZrIat7ReDSOiVikmSlTgYwuky26AuqbILbMWKA20QlOqFAlK9E4dJG5GnJHMwWQ5zzC+ni8MOaD8OqAXbd/cQP5PofBLh/yZi/Dkx+h41adIeaYt8D1IX2G4xphlI7vHDkjrKPgq0D1MfIaLGkQjPAchkM1SEqgqMBvEftR5lLsTIFWrI16Ek5Iw8+oNIF3tCMhxXzreOdgUGIlUiyrAlpF4ywxw5z/r2fEGEqcGzqAl2Il0sqAKcc7IKYpVi46LUv2JFEz2JEG0yTyzESLRtzViDOa8Vqr1mqvxnRf0IlXt3qBF3ubB3yN7sT1G7VDH6hbTcGEoDbI0wOPaLe7wpawNrwpfC3sDZf4Ze/wu/7Sv+GCsx6C41yt1k6yjqDlWq0INiSeSmzwvPI75QPhdjeTs199+tC9YQPduF5v6X13hnf5tCeC7gBVOoGmtbCZBYs6jVOa6+rYzQlNp0+nwDGgyyritXpd9AJmJlOpSuYyzNUQnQHBtYr0moL3JxORow5pVBn0NLL34JnxnDARtTPq5r6EZj3Ua5pOkS1N55VjX0eV+YfcZZSJNDxNdxXZPRl3FsAauWIcmfpiBxap7oW4a2bQKZfgUyY2F1e0373sKruLv0EWBgXvJzpPjmp1EPsX/qyninN0kC49TnQnik4hskGH6MoB4qarl6izeCDy+Ukcco6vLAiG6Osust2LP6tgFDmsAc2G4HnKl0FZF/8lU1T+vCP+/Z6Pg9pRuxKHnOFfmwJTgWcN3pmkAXineA77P/dB4F8="
+    },
+    {
+      "name": "Biofouled PP | sample 03",
+      "file": "NAP_03-PP_bio_ATR_0876602e.csv",
+      "truth": "PP",
+      "treatment": "bio",
+      "candidate": "PP",
+      "similarity": 0.8127017974087217,
+      "margin": 0.208782832656458,
+      "accepted": false,
+      "reference_id": "03888685ae9de84808a512eb11e571d8",
+      "data": "eNodlHtsFWUQxc/ee9t7C7S0tIBYUShFhPJWUgEB8REaqCixiCBaQ3gEQUQUjYCGiCZAqFJIiEaRR4yoUUQxRqmACQmI4h+SQpDUVhSK8m5pKeU+jr9LNt/u9+3Mzpw5c2ZLwzXO0K26g1WkvipkV6Lb1OaY8pTF6sGpt/pj765sVok66w8f9xU3+oLP+qpPuwXvLrpT+Wp2kSp10pdS47zDR3zUf+PV5CRXpnJVoLjbnHJYgZJkztEIxfSzj7nBF33dEYWJ34ecObpbtT7lfPb9NZRvW9xRg1WmRfpdPYIWX3ZDMD1jZfil9vGJllSjB+hJPax5ekSD+HaQ7tU7SukhfanaYGJonpa43IeTx5KdUlFvdo3rwN4OqrgfJMdQ3a5SDSN3qXpRi5TwP+Q46Th4QyrGPpLY0/WCVqhKH+ob7VGjjqtGO7RQM8GW8hkv9xbP9CQXudhZnuCvU8M8ygXO8Hov825X+3sqrfOf3u/zcNfgn9ifYJ+CqRYQxW14uEzONl8D3xnu2UpbIrDc6nNYevKM0I84p070qcndlWYv7RNSR6wFugL6LljC6kAtTc7SafqUhV8//Crod72lw+6to47C178w2FUHQTJcA+n8VQ9RP+0mUqsDDaAzTSBpcwcijyDOKbCZCpr8Fyhq6FQeqA+7Gd626DWUstN7iRmlfwHshdBFmDp64tWZ/l4CXa6OgD8H/q+BrxX1tKOUArxjqiNOkh6lVx79GIm6ToK4Ee3lUHudW/2fe+k86hlMVUmQZfJMsxEDWRt6iqkTUaO64bR+AmUQ5wZMN+MdUQSvdlAk8LjOiiqt0mb4D+EXYO1C1e0uZAXqRvRCEIeIENx8U8AXMe6ZSvcg5VuImAvb+Zy78v1VfISeo0SK4hHhfS497Amvd/FM97TZCbyyiZlPpM43ZySbiStGg/01Bhbv0aNcZXpKL2u/yoOa0NrIj0F1snvyldQG16ssfCA8TWs9T4s9ElV9roPBsVDf8K+hKeHt4Sq/n+iW+CK+L1Hp4nBV5p5QLLUxVZQcHT8UL0pOTGV6hb+C6XNwXEyXB5F3nJ7WKD3OPE3UMypH3dN5LtAkTVEF871Ms9D7DOyvaqmWaK6Wa5Xe0nq9rXXapA16V1u0WZ/oB+3Udn2nrTrAHH6gj/WZtjE76/B5Q6tVrZXEWa8XiTNHs8kzmdwzNU1TyT+euseyykEzhmyj+UOVYCuEn/uZ1TyUMxxVX2LuGlh7/Rta2IYGN1DVLr/pVV7Dtdgz2C3x837As/ysKz3E8z3bj3mgp3qRK/wEkzrbU5jeEcxuGedleA/3NK653uc++Ezwe8S8z2M92c/5I+9xqef4dc5b/SlZKt3bqz0O2xpvBEe+BhNpKfMeRxm7vMDfooJqZkho4RemrBbE/ZiGQPN1yLVOz/tl/gFnXe9u6LuJnsTRR1rlFeh8LVPe7oVoalM6Ov2q5x9bohNMTB/eRuDjAtPRwiRc9P8mSKpX"
+    },
+    {
+      "name": "PET | sample 04",
+      "file": "NAP_06-PET_bio_ATR_c0bfb726.csv",
+      "truth": "PET",
+      "treatment": "bio",
+      "candidate": "Other",
+      "similarity": 0.9767008350694292,
+      "margin": 0.3469565838252844,
+      "accepted": false,
+      "reference_id": "51e760bf98282c6bcbb2e9bbf7dfb934",
+      "data": "eNodVFtsVFUUXefOdKbTMu0UWgq0pdIW2iqhLSBBQLEan0RrNGKaSEJ8fZAoGBKUxKSJYsAXEf0AIwImhBoD8hQVeaXYUKVgKxZbRLTlYXnaB51O5957lmvIzZ3ZZ59z1l577b1vYbQpkJ6+K/qPHxvsd0/jBbPMtKCcTf5OP5+lJjeQk7Ys/HukLcLQ2OAlrPGaEnXDOxK1fqNpZLvbl1zofeR/6J/1Vni93o/+Hvs+F6DebDIZ2GEP2K3cjoWmy8xxzjiHAvel1YVPRz7OXJF5T2RS4Ly3NFnoet7rdq13ZKR8JOJav90O+ge8U+5L7jZ3ql9iK+wr9nvbamM8xSKz3nRyrT1sV3Ma0kyrU+Fk4T3boZivId00m5+cF4PLQ3G3IPGXe9GOh8WbpsEsQSXmowgr7W67xOaxnhu4kZ/za3p8A+1mjZPrr7Pv8ByTHOA1/szzTNDSV5QJmIQHsR7ZZpeZz1q7mP+xHIuwGQfRgTuxjhNRiycxF3ehGvMwE09hsXa7QdSad80XJt9Z5USCQ+GTUZNdP3pf5KwfG9gQXzq0Zaiz/1AiMVzktnjHbRlXch9b2Mwe3mAfe8XtX8WK6/X0joLBMC/yKq/wJq+L3Tn208Egx8BjGDfpkizFKABpCGEM+sQ/psyjyJYnHz6z0KW8+jisp5sHUIPl/I3jMMQf2MWA7u5nPXqFW6IsXKbhAcySL8EoihEQZqVYWPE7ySdQgDPMQwzdUuuKNPuWZTp1mNPxKx9nEn1oE/p+cS+ROmeZIf69YjgkxeLiEmcBrnECRothOwv160v/MsWJSssijEeKqUE/x2onR1o/pJ0GpiuLLmUxHqXaaxLCoGoWELNBRjAitZJSbUS6xFXNW7IdeR1kKqOY0EeUH/TvIAsUmoN05XJDEUKyrLIerXiWIeGFpFyavEFc1n4eBqTyGCRkU5p7UjwoTkbKRZGDlA3hZSCsB9q/frsqrthRGibFwoqDr6yCiCDlzVR1wroRuR3FkQ9CSdkh+TIUPSbkgLAmKErqTp74BaVQKe7HAszQmWydHatzVVpNxxThDYpXSrOgMitQD+fLNwPP4DNcwEWcwKtab+BbfI6ruZnf8Kh07NFzWV3Vpvr2St9b4l2CiarEs2jQ/ARRJpwyxYmpzjm4qozuUL/Pl6JW53PFp1I8ipGrWFPEb7ImowYV8j0qbnPxCGZrXS3M2ZiqDO7VqkpWlWo7S6iTUS7ESj3VKNT9cfLMVMwKTBNmqkPm4G51Ya5ulki7VKSg3hqpk4lbrFRFHeHENTkDygG6fUU1mKW9LOzhLzyh1V5+xT/4KXezkZs0cUc1c7vZKgVauJM72KmuvcDvuE12GHu1buYHUqVDXf8JF/FtPoydOruVDfyTx3hEOp3T+SVS4Zp0f5mH1IPN+sp8qTgZQujnKq7lwdsdu13fsTJ0qiOaNDVxddjfTE3sRl7iY9KpR0yKlf8odUqWZqVbExPRLBxXpMmoU1WP6cuV5NPK7ZSsEjyvCg0oZoZutGpi5iGFOqRZ+B9VRrjP"
+    }
+  ],
+  "source": "MicroPlastiX SpecDB, Lenz et al. (2023), DOI 10.22000/1820",
+  "license": "CC BY-SA 4.0",
+  "transformation": "Linear interpolation to frozen E18 grid; absorbance rounded to 5 decimal places and compressed as little-endian int16 deltas. Stored scores refer to original E18 calculation."
+}
