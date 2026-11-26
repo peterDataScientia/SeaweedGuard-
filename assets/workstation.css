@@ -1,0 +1,26 @@
+<style>
+:root{--sg-accent:#23d5c6;--sg-border:#253c51}
+.stApp{background:radial-gradient(ellipse at 95% 0%,#103043 0%,transparent 42%),#08121d}
+[data-testid="stSidebar"]{background:#0d1928;border-right:1px solid #253c51}
+[data-testid="stSidebar"] [role="radiogroup"] label{padding:9px 8px;border-radius:7px}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked){background:#153b45}
+.block-container{padding-top:1.8rem;padding-bottom:1rem;max-width:1550px}
+[data-testid="stHeader"]{background:transparent}
+.sg-brand{font-size:1.65rem;font-weight:800;letter-spacing:-.05em;color:#edfaff}
+.sg-brand span{color:#23d5c6}.sg-kicker{font-size:.67rem;color:#86a4ba;letter-spacing:.17em;font-weight:700}
+.sg-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #253c51;padding:0 0 16px;margin-bottom:17px}
+.sg-title{font-size:1.8rem;font-weight:750;letter-spacing:-.04em;line-height:1.25}
+.sg-online{border:1px solid #295960;color:#75e9de;background:#103238;padding:7px 12px;border-radius:6px;font-size:.72rem;letter-spacing:.08em;white-space:nowrap}
+.sg-offline{color:#e0b96c;background:#302819;border:1px solid #66512c;padding:7px 12px;border-radius:6px;font-size:.72rem;letter-spacing:.08em}
+[data-testid="stMetric"]{background:linear-gradient(145deg,#132739,#0f1e2f);border:1px solid #294258;border-radius:10px;padding:15px 18px}
+[data-testid="stMetricValue"]{font-weight:700;letter-spacing:-.04em;color:#e7fbff}
+[data-testid="stMetricLabel"]{color:#a6bfd0}
+[data-testid="stVerticalBlockBorderWrapper"]{border-color:#253c51!important;border-radius:12px!important}
+.stButton>button[kind="primary"]{background:#23d5c6;color:#061821;border:0;font-weight:750;border-radius:7px;min-height:44px}
+.stButton>button[kind="primary"]:hover{background:#70f4e6;color:#061821}
+[data-testid="stFileUploaderDropzone"]{border:1px dashed #376177;background:#102537;border-radius:9px}
+[data-testid="stDataFrame"]{border:1px solid #253c51;border-radius:8px}
+.sg-foot{color:#7c98ac;font-size:.72rem;border-top:1px solid #253c51;padding-top:12px;margin-top:24px;letter-spacing:.04em}
+.sg-empty{display:grid;place-items:center;height:340px;border:1px solid #253c51;border-radius:10px;background:repeating-linear-gradient(0deg,transparent,transparent 39px,#1d3447 40px),repeating-linear-gradient(90deg,#0c1a29,#0c1a29 59px,#1d3447 60px);color:#9bb7c9;text-align:center}
+.sg-empty strong{display:block;color:#d5edf5;font-size:1.1rem;margin-bottom:6px}
+</style>
