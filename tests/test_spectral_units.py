@@ -19,3 +19,14 @@ def test_preview_and_bad_transmittance():
     np.testing.assert_allclose(aa,a)
     for value in [0.,-1.,101.]:
         with pytest.raises(ValueError): input_absorbance([value],"percent transmittance")
+
+
+def test_header_precedence():
+    import pandas as pd
+    from spectral_units import csv_input_unit
+    for name,expected in [("absorbance","absorbance"),("Absorbance [%]","percent absorbance"),("%T","percent transmittance"),("Transmittance (%)","percent transmittance")]:
+        frame=pd.DataFrame(columns=["wavenumber",name])
+        for fallback in ["absorbance","percent absorbance","percent transmittance"]:
+            assert csv_input_unit(frame,fallback)==expected
+    frame=pd.DataFrame(columns=["wavenumber","intensity"])
+    assert csv_input_unit(frame,"percent transmittance")=="percent transmittance"
