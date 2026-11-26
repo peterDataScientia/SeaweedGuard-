@@ -32,32 +32,34 @@ write.csv(meta,file.path(out,"reference_metadata.csv"),row.names=FALSE)
 message("Reference metadata exported: ",nrow(meta)," rows")
 print(table(meta$SpectrumType,useNA="ifany"))
 # Metadata review is mandatory before selecting a provenance-clean reference pool.
-review <- file.path(out,"reference_review.csv")
-if (!file.exists(review)) {
-  write.csv(data.frame(index=seq_len(nrow(meta)),include=FALSE,reason="pending provenance review"),review,row.names=FALSE)
-  message("PAUSED: review reference_metadata.csv and reference_review.csv before matching."); quit(save="no",status=0)
-}
-r <- read.csv(review)
-stopifnot(nrow(r)==nrow(meta),identical(as.integer(r$index),seq_len(nrow(meta))))
-keep <- which(r$include %in% c(TRUE,"TRUE","true") & grepl("FTIR|infrared|^IR$",meta$SpectrumType,ignore.case=TRUE))
-if (!length(keep)) { message("PAUSED: no approved references yet."); quit(save="no",status=0) }
-lib <- filter_spec(lib,keep)
+review <- file.path(out,"reference_review_audited.csv")
+if (!file.exists(review)) stop("Audited review missing")
+r <- read.csv(review,stringsAsFactors=FALSE)
+stopifnot(nrow(r)==nrow(meta),identical(as.integer(r$index),seq_len(nrow(meta))),
+          identical(as.character(r$sample_name),as.character(meta$sample_name)))
+keep <- which(tolower(as.character(r$include))=="true")
+stopifnot(length(keep)==459L,all(meta$organization[keep] %in% c("flopp, de frond et al. 2021","primpke et al. 2018")))
+approved <- meta[keep,,drop=FALSE]
+lib <- filter_spec(lib,logic=as.character(approved$sample_name))
+stopifnot(nrow(lib$metadata)==length(keep),setequal(as.character(lib$metadata$sample_name),as.character(approved$sample_name)))
+write.csv(approved,file.path(out,"approved_reference_metadata.csv"),row.names=FALSE)
+message("Approved references: ",length(keep))
 input <- file.path(out,"queries")
 files <- list.files(input,pattern="\\.csv$",full.names=TRUE)
-stopifnot(length(files)>0)
+truth <- read.csv(file.path(out,"truth.csv"),stringsAsFactors=FALSE)
+stopifnot(length(files)==232L,setequal(sub("\\.csv$","",basename(files)),truth$hash))
 results <- list()
 for (f in files) {
   a <- read.csv(f)
   q <- as_OpenSpecy(x=a$wavenumber,spectra=data.frame(query=a$absorbance))
-  q <- process_spec(q,conform_spec=FALSE,smooth_intens=TRUE)
+  q <- process_spec(q,conform_spec=FALSE,smooth_intens=TRUE,smooth_intens_args=list(polynomial=3,window=11,derivative=1,abs=TRUE))
   m <- match_spec(q,library=lib,conform=TRUE,top_n=5)
   m <- as.data.frame(m)
-  for (col in intersect(c("SpectrumIdentity","polymer_class","sample_name","organization"),names(lib$metadata))) {
-    # Preserve native match identifiers and use package metadata accessor.
-    m[[col]] <- vapply(m$library_id,function(id) {
-      v <- get_metadata(lib,logic=id,rm_empty=FALSE)[[col]]
-      if(length(v)==1) as.character(v) else NA_character_
-    },character(1))
+  stopifnot(all(c("library_id","match_val") %in% names(m)),nrow(m)>0)
+  pos <- match(as.character(m$library_id),as.character(lib$metadata$sample_name))
+  stopifnot(!anyNA(pos))
+  for (col in intersect(c("spectrum_identity","material_class","material","sample_name","organization"),names(lib$metadata))) {
+    m[[col]] <- lib$metadata[[col]][pos]
   }
   m$query_id <- sub("\\.csv$","",basename(f))
   results[[length(results)+1]] <- m
