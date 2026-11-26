@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.8 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.9 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -34,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.8  /  E18 FROZEN")
+    st.caption("v0.2.9  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -105,11 +105,11 @@ if demo_mode:
             result=current.get("result") if current.get("label")==label and current.get("model_id")==model_id else None
             if result:
                 cols=st.columns(3)
-                cols[0].metric("POLYMER CANDIDATE",result["candidate"])
+                cols[0].metric("POLYMER CANDIDATE" if ready else "POLYMER · REPLAY",result["candidate"])
                 cols[1].metric("SIMILARITY",f'{result["similarity"]:.4f}')
                 cols[2].metric("CLASS MARGIN",f'{result["margin"]:.4f}')
                 status=result["status"]
-                st.caption(("● Accepted" if result["accepted"] else "● Non-target" if result["candidate"]=="Other" else "● Tentative · review")+"  |  "+("Live" if ready else "Recorded result"))
+                if not result["accepted"]: st.caption("Non-target" if result["candidate"]=="Other" else "Tentative · review")
             spectrum_view(grid,[("Measured example",example["signal"])],"Absorbance","demo_"+str(list(examples).index(label)),tools=figure_tools)
             with figure_tools.popover("Data & results",use_container_width=True):
                 st.caption(example["file"])
@@ -171,12 +171,11 @@ elif page in ("Analyzer","Batch analysis"):
             if results:
                 item=results[0];r=item["row"]
                 cols=st.columns(3)
-                cols[0].metric("POLYMER CANDIDATE",r["candidate"])
+                recorded=r.get("mode")=="Recorded E18 replay"
+                cols[0].metric("POLYMER · REPLAY" if recorded else "POLYMER CANDIDATE",r["candidate"])
                 cols[1].metric("SIMILARITY",f"{r['similarity']:.4f}")
                 cols[2].metric("CLASS MARGIN",f"{r['margin']:.4f}")
-                st.caption("● Accepted candidate" if r["accepted"] else "● Non-target" if r["candidate"]=="Other" else "● Tentative · review")
-                recorded=r.get("mode")=="Recorded E18 replay"
-                if recorded: st.caption("Recorded result")
+                if not r["accepted"]: st.caption("Non-target" if r["candidate"]=="Other" else "Tentative · review")
                 view="Measured spectrum" if recorded else st.radio("View",["Measured spectrum","Reference overlay","Ranked matches"],horizontal=True,label_visibility="collapsed",key="live_view")
                 if view=="Measured spectrum":
                     spectrum_view(item["grid"],[("Measured",item["signal"])],"Absorbance","raw",tools=figure_tools)
@@ -248,4 +247,4 @@ else:
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.8 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.9 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
