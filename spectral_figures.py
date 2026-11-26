@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 from figentra import style_context, new_figure, style_axes, legend_bold
+from spectral_units import display_signal, UNITS
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -33,6 +34,15 @@ def spectrum_view(x, series, ylabel, key, mask=False, tools=None):
     x=np.asarray(x,dtype=float)
     series=[(str(n),np.asarray(v,dtype=float)) for n,v in series]
     controls, exports = st.columns([1,1]) if tools is None else (tools,tools)
+    unit_tag=""
+    if ylabel=="Absorbance":
+        selected=controls.selectbox("Display units",UNITS,key=key+"_display_unit")
+        try:
+            series=[(n,display_signal(v,selected)) for n,v in series]
+        except FloatingPointError:
+            st.error("Intensity conversion exceeds numeric range.");return
+        ylabel={"Absorbance":"Absorbance","% Absorbance":"Absorbance [%]","% Transmittance":"Transmittance [%]"}[selected]
+        unit_tag="_"+str(UNITS.index(selected))
     with controls.popover("Figure controls",use_container_width=True):
         a,b,c=st.columns(3)
         style=a.selectbox("Style",["Digital","Publication"],key=key+"_style")
@@ -58,7 +68,7 @@ def spectrum_view(x, series, ylabel, key, mask=False, tools=None):
             low,high=float(vals.min()),float(vals.max())
             if high<=low: high=low+max(abs(low)*.05,.001)
             pad=(high-low)*.05
-            yrange=st.slider("Y-axis range",low-pad,high+pad,(low-pad,high+pad),key=key+"_yrange",format="%.5f")
+            yrange=st.slider("Y-axis range",low-pad,high+pad,(low-pad,high+pad),key=key+"_yrange"+unit_tag,format="%.5f")
     pub=style=="Publication"
     palette=("#111111","#C43C35") if pub else ("#23D5C6","#FFB454")
     bg="#FFFFFF" if pub else "#0C1A29"
@@ -69,7 +79,7 @@ def spectrum_view(x, series, ylabel, key, mask=False, tools=None):
     if show_mask: fig.add_vrect(x0=1500,x1=1700,fillcolor="#9DA9B3",opacity=.20,line_width=0,layer="below")
     axis=dict(showline=True,linecolor=fg,linewidth=2.67 if pub else 1.3,ticks="outside",ticklen=8 if pub else 5,tickwidth=2.67 if pub else 1,showgrid=False,zeroline=False,tickfont=dict(size=16 if pub else 13,family="DejaVu Sans",color=fg,weight=700 if pub else 400),nticks=6)
     fig.update_layout(template="none",paper_bgcolor=bg,plot_bgcolor=bg,height=height,margin=dict(l=76,r=18,t=38 if legend else 16,b=62),font=dict(family="DejaVu Sans",color=fg,size=16 if pub else 13),showlegend=legend,legend=dict(orientation="h",y=1.02,x=0,font=dict(size=14.67 if pub else 13,weight=700 if pub else 400,color=fg,family="DejaVu Sans")),xaxis=dict(**axis,title=dict(text="Wavenumber [cm⁻¹]",font=dict(size=20 if pub else 15,weight=700,color=fg,family="DejaVu Sans")),range=[limits[1],limits[0]]),yaxis=dict(**axis,title=dict(text=ylabel,font=dict(size=20 if pub else 15,weight=700,color=fg,family="DejaVu Sans")),range=list(yrange) if yrange else None,autorange=yrange is None),hovermode="x unified",dragmode="zoom")
-    st.plotly_chart(fig,use_container_width=True,theme=None,config={"displaylogo":False,"scrollZoom":True,"responsive":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_view","scale":2}},key=key+"_chart")
+    st.plotly_chart(fig,use_container_width=True,theme=None,config={"displaylogo":False,"scrollZoom":True,"responsive":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_view","scale":2}},key=key+"_chart"+unit_tag)
     with exports.popover("Export figure",use_container_width=True):
         st.caption("600 DPI · Figentra · selected axis range")
         fmt=st.selectbox("Format",["png","svg","pdf"],key=key+"_format")
