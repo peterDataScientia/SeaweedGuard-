@@ -6,3 +6,4 @@ joblib
 streamlit
 pytest
 plotly>=5.24
+figentra==0.1.2
