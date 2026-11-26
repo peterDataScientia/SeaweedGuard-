@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="565" viewBox="0 0 1200 565" role="img" aria-labelledby="title desc">
+<title id="title">SeaweedGuard proposed implementation pathway</title>
+<desc id="desc">Seven stages connect farm sampling, sample registration, laboratory analysis, SeaweedGuard spectral screening, expert confirmation, corrective action and repeat monitoring. The feedback arrow leads back to farm sampling. Animated connectors indicate flow; all information is visible without animation.</desc>
+<defs>
+<marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M0 0 L7 3.5 L0 7 Z" fill="#174C84"/></marker>
+<style>
+text{font-family:'DejaVu Sans',Arial,sans-serif;font-weight:700}
+.flow{stroke:#174C84;stroke-width:3.4;fill:none;marker-end:url(#arrow)}
+.pulse{fill:none;stroke:#00E6B8;stroke-width:5.5;stroke-linecap:round;stroke-dasharray:9 90;animation:travel 2.5s linear infinite}
+@keyframes travel{to{stroke-dashoffset:-99}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none;display:none}}
+</style>
+</defs>
+<rect width="1200" height="565" rx="18" fill="#fff"/>
+<text x="30" y="38" font-size="27" font-weight="800" fill="#071F37">Farm-to-laboratory monitoring pathway</text>
+<text x="30" y="65" font-size="15" font-weight="700" fill="#254967">Proposed pilot workflow · sample traceability, reliable identification and feedback</text>
+<path class="flow" d="M285 180 H325"/><path class="pulse" d="M285 180 H325" style="animation-delay:0.0s"/>
+<path class="flow" d="M580 180 H620"/><path class="pulse" d="M580 180 H620" style="animation-delay:0.3s"/>
+<path class="flow" d="M875 180 H915"/><path class="pulse" d="M875 180 H915" style="animation-delay:0.6s"/>
+<path class="flow" d="M1042.5 255 V330"/><path class="pulse" d="M1042.5 255 V330" style="animation-delay:0.9s"/>
+<path class="flow" d="M915 405 H875"/><path class="pulse" d="M915 405 H875" style="animation-delay:1.2s"/>
+<path class="flow" d="M620 405 H580"/><path class="pulse" d="M620 405 H580" style="animation-delay:1.5s"/>
+<path class="flow" d="M325 405 H157.5 V255"/><path class="pulse" d="M325 405 H157.5 V255" style="animation-delay:1.8s"/>
+<text x="173" y="385" font-size="12" font-weight="700" fill="#008D79">Feedback loop</text>
+<g>
+<rect x="30" y="105" width="255" height="150" rx="12" fill="#C9FFF1" stroke="#00B89C" stroke-width="2.6"/>
+<rect x="30" y="105" width="255" height="9" rx="4" fill="#008D79"/>
+<circle cx="54" cy="134" r="15" fill="#008D79"/>
+<text x="54" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">01</text>
+<text x="75" y="140" font-size="16.5" font-weight="800" fill="#07233B">Farm sampling</text>
+<text x="45" y="170" font-size="12.3" font-weight="700" fill="#006552">Farmers and extension officers</text>
+<path d="M45 182 H270" stroke="#00B89C" stroke-opacity=".55"/>
+<text x="45" y="204" font-size="12.5" font-weight="700" fill="#122D42">Collect representative samples</text>
+<text x="45" y="223" font-size="12.5" font-weight="700" fill="#122D42">at selected production stages.</text>
+</g>
+<g>
+<rect x="325" y="105" width="255" height="150" rx="12" fill="#C9FFF1" stroke="#00B89C" stroke-width="2.6"/>
+<rect x="325" y="105" width="255" height="9" rx="4" fill="#008D79"/>
+<circle cx="349" cy="134" r="15" fill="#008D79"/>
+<text x="349" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">02</text>
+<text x="370" y="140" font-size="16.5" font-weight="800" fill="#07233B">Sample registration</text>
+<text x="340" y="170" font-size="12.3" font-weight="700" fill="#006552">Field team</text>
+<path d="M340 182 H565" stroke="#00B89C" stroke-opacity=".55"/>
+<text x="340" y="204" font-size="12.5" font-weight="700" fill="#122D42">Assign a unique ID; record site,</text>
+<text x="340" y="223" font-size="12.5" font-weight="700" fill="#122D42">stage and relevant materials.</text>
+</g>
+<g>
+<rect x="620" y="105" width="255" height="150" rx="12" fill="#D4E8FF" stroke="#2580FF" stroke-width="2.6"/>
+<rect x="620" y="105" width="255" height="9" rx="4" fill="#075DE8"/>
+<circle cx="644" cy="134" r="15" fill="#075DE8"/>
+<text x="644" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">03</text>
+<text x="665" y="140" font-size="16.5" font-weight="800" fill="#07233B">Laboratory analysis</text>
+<text x="635" y="170" font-size="12.3" font-weight="700" fill="#0649B5">Analytical laboratory</text>
+<path d="M635 182 H860" stroke="#2580FF" stroke-opacity=".55"/>
+<text x="635" y="204" font-size="12.5" font-weight="700" fill="#122D42">Isolate particles with controls;</text>
+<text x="635" y="223" font-size="12.5" font-weight="700" fill="#122D42">measure ATR-FTIR spectra.</text>
+</g>
+<g>
+<rect x="915" y="105" width="255" height="150" rx="12" fill="#D4E8FF" stroke="#2580FF" stroke-width="2.6"/>
+<rect x="915" y="105" width="255" height="9" rx="4" fill="#075DE8"/>
+<circle cx="939" cy="134" r="15" fill="#075DE8"/>
+<text x="939" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">04</text>
+<text x="960" y="140" font-size="16.5" font-weight="800" fill="#07233B">SeaweedGuard</text>
+<text x="930" y="170" font-size="12.3" font-weight="700" fill="#0649B5">Laboratory personnel</text>
+<path d="M930 182 H1155" stroke="#2580FF" stroke-opacity=".55"/>
+<text x="930" y="204" font-size="12.5" font-weight="700" fill="#122D42">Screen spectra; flag uncertain</text>
+<text x="930" y="223" font-size="12.5" font-weight="700" fill="#122D42">and non-target assignments.</text>
+</g>
+<g>
+<rect x="915" y="330" width="255" height="150" rx="12" fill="#D4E8FF" stroke="#2580FF" stroke-width="2.6"/>
+<rect x="915" y="330" width="255" height="9" rx="4" fill="#075DE8"/>
+<circle cx="939" cy="359" r="15" fill="#075DE8"/>
+<text x="939" y="364" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">05</text>
+<text x="960" y="365" font-size="16.5" font-weight="800" fill="#07233B">Expert confirmation</text>
+<text x="930" y="395" font-size="12.3" font-weight="700" fill="#0649B5">Analytical specialists</text>
+<path d="M930 407 H1155" stroke="#2580FF" stroke-opacity=".55"/>
+<text x="930" y="429" font-size="12.5" font-weight="700" fill="#122D42">Review assignments and record</text>
+<text x="930" y="448" font-size="12.5" font-weight="700" fill="#122D42">confirmed laboratory findings.</text>
+</g>
+<g>
+<rect x="620" y="330" width="255" height="150" rx="12" fill="#FFE3AE" stroke="#FF9300" stroke-width="2.6"/>
+<rect x="620" y="330" width="255" height="9" rx="4" fill="#D85A00"/>
+<circle cx="644" cy="359" r="15" fill="#D85A00"/>
+<text x="644" y="364" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">06</text>
+<text x="665" y="365" font-size="16.5" font-weight="800" fill="#07233B">Corrective action</text>
+<text x="635" y="395" font-size="12.3" font-weight="700" fill="#9A3900">Farmers and processors</text>
+<path d="M635 407 H860" stroke="#FF9300" stroke-opacity=".55"/>
+<text x="635" y="429" font-size="12.5" font-weight="700" fill="#122D42">Investigate potential sources;</text>
+<text x="635" y="448" font-size="12.5" font-weight="700" fill="#122D42">select preventive measures.</text>
+</g>
+<g>
+<rect x="325" y="330" width="255" height="150" rx="12" fill="#C9FFF1" stroke="#00B89C" stroke-width="2.6"/>
+<rect x="325" y="330" width="255" height="9" rx="4" fill="#008D79"/>
+<circle cx="349" cy="359" r="15" fill="#008D79"/>
+<text x="349" y="364" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">07</text>
+<text x="370" y="365" font-size="16.5" font-weight="800" fill="#07233B">Repeat monitoring</text>
+<text x="340" y="395" font-size="12.3" font-weight="700" fill="#006552">Field team and laboratory</text>
+<path d="M340 407 H565" stroke="#00B89C" stroke-opacity=".55"/>
+<text x="340" y="429" font-size="12.5" font-weight="700" fill="#122D42">Compare measurements before</text>
+<text x="340" y="448" font-size="12.5" font-weight="700" fill="#122D42">and after interventions.</text>
+</g>
+<g font-size="12.5" font-weight="700" fill="#12344D"><circle cx="40" cy="532" r="6" fill="#008D79"/><text x="53" y="537">Field and feedback</text><circle cx="240" cy="532" r="6" fill="#075DE8"/><text x="253" y="537">Laboratory and screening</text><circle cx="474" cy="532" r="6" fill="#D85A00"/><text x="487" y="537">Management action</text></g>
+</svg>
