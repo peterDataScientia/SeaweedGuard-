@@ -1,7 +1,7 @@
 name: Workstation smoke test
 on:
   push:
-    paths: ['app.py','frozen_engine.py','assets/**','.streamlit/**','requirements.txt','tests/**','.github/workflows/workstation.yml']
+    paths: ['app.py','frozen_engine.py','spectral_figures.py','demo_examples.py','assets/**','.streamlit/**','requirements.txt','tests/**','.github/workflows/workstation.yml']
   workflow_dispatch:
 jobs:
   smoke:
@@ -12,5 +12,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python -m py_compile app.py frozen_engine.py
-      - run: python -m pytest -q tests/test_workstation.py
+      - run: python -m py_compile app.py frozen_engine.py spectral_figures.py demo_examples.py
+      - run: python -m pytest -q tests/test_workstation.py tests/test_spectral_figures.py
