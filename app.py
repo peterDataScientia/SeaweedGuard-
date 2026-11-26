@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.11 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v1.0.0 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -34,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.11  /  E18 FROZEN")
+    st.caption("v1.0.0  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -260,4 +260,4 @@ else:
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.11 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 1.0.0 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
