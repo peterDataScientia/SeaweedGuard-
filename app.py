@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.10 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.11 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -34,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.10  /  E18 FROZEN")
+    st.caption("v0.2.11  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -44,7 +44,7 @@ status="LIVE ENGINE" if ready else "DEMO AVAILABLE" if page=="Analyzer" else "MO
 st.markdown(f'<div class="sg-header"><div><div class="sg-kicker">{k}</div><div class="sg-title">{t}</div></div><div class="{"sg-online" if ready else "sg-offline"}">● {status}</div></div>',unsafe_allow_html=True)
 
 from spectral_figures import spectrum_view
-from spectral_units import preview_spectrum
+from spectral_units import preview_spectrum, csv_input_unit
 
 def analyze_file(f,unit):
     r=screen(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),model,unit)
@@ -125,9 +125,15 @@ elif page in ("Analyzer","Batch analysis"):
         with st.container(border=True):
             st.markdown("**ACQUISITION**")
             with st.popover("CSV input units",use_container_width=True):
-                unit=st.selectbox("Units in uploaded file",["absorbance","percent absorbance","percent transmittance"],key="input_units_"+page)
+                unit=st.selectbox("Unlabelled CSV units",["absorbance","percent absorbance","percent transmittance"],key="input_units_"+page,help="Explicit CSV intensity headers take precedence. Use Display units to change the graph.")
             files=st.file_uploader("Import FTIR CSV" if not batch else "Import FTIR spectra",type=["csv"],accept_multiple_files=batch,key="spectra_"+page)
             files=files if batch else ([files] if files else [])
+            file_units=[]
+            for f in files:
+                try:
+                    file_units.append(csv_input_unit(pd.read_csv(BytesIO(f.getvalue()),nrows=0),unit))
+                except (ValueError,TypeError,pd.errors.ParserError):
+                    file_units.append(unit)
             with st.popover("Download examples",use_container_width=True):
                 eg,ee=load_examples()
                 for i,(name,ex) in enumerate(ee.items()):
@@ -136,19 +142,19 @@ elif page in ("Analyzer","Batch analysis"):
             if not ready:
                 for i,f in enumerate(files):
                     try:
-                        matched=match_uploaded_example(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),unit)
+                        matched=match_uploaded_example(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),file_units[i])
                         if matched is not None: replay[i]=matched
                     except (ValueError,TypeError,pd.errors.ParserError):
                         pass
             can_run=bool(files) and (ready or len(replay)==len(files))
-            run_key=hashlib.sha256(repr((page,model_id,unit,[(f.name,hashlib.sha256(f.getvalue()).hexdigest()) for f in files])).encode()).hexdigest()
+            run_key=hashlib.sha256(repr((page,model_id,tuple(file_units),[(f.name,hashlib.sha256(f.getvalue()).hexdigest()) for f in files])).encode()).hexdigest()
             if st.button(("▶  Analyze batch" if batch else "▶  Analyze spectrum") if ready else "▶  Replay examples",type="primary",use_container_width=True,disabled=not can_run):
                 results=[];errors=[];logs=[]
                 p=st.progress(0,text="Starting analysis")
                 for i,f in enumerate(files):
                     try:
                         if ready:
-                            item=analyze_file(f,unit)
+                            item=analyze_file(f,file_units[i])
                             item["row"]["mode"]="Live"
                         else:
                             eg,ex=replay[i]
@@ -192,10 +198,10 @@ elif page in ("Analyzer","Batch analysis"):
             else:
                 if files:
                     try:
-                        px,py=preview_spectrum(pd.read_csv(BytesIO(files[0].getvalue())).to_numpy(float),unit)
+                        px,py=preview_spectrum(pd.read_csv(BytesIO(files[0].getvalue())).to_numpy(float),file_units[0])
                         spectrum_view(px,[("Measured",py)],"Absorbance","raw",tools=figure_tools)
                     except (ValueError,TypeError,pd.errors.ParserError) as exc:
-                        empty_view();st.error(str(exc))
+                        empty_view();st.warning(str(exc))
                 else: empty_view()
                 if errors: st.error(errors[0]["error"])
         else:
@@ -248,10 +254,10 @@ elif page=="Settings":
     if ready: st.code(model_id,language=None)
 else:
     with st.expander("Quick start"):
-        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Downloaded built-in examples can also be uploaded for recorded replay without a model. Connect the authorised model in Settings for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose CSV input units to match the file. Display units convert the plot and publication export independently without altering screening results. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
+        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Downloaded built-in examples can also be uploaded for recorded replay without a model. Connect the authorised model in Settings for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Explicit CSV headers determine input units automatically; select fallback input units only for unlabelled data. Display units convert the plot and publication export independently without altering screening results. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
     st.markdown("**E18 / MicroPlastiX external validation**")
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.10 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.11 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
