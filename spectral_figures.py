@@ -29,15 +29,15 @@ def publication_bytes(x, series, ylabel, mask, limits, yrange, line_width, palet
             return buf.getvalue()
         finally: plt.close(fig)
 
-def spectrum_view(x, series, ylabel, key, mask=False):
+def spectrum_view(x, series, ylabel, key, mask=False, tools=None):
     x=np.asarray(x,dtype=float)
     series=[(str(n),np.asarray(v,dtype=float)) for n,v in series]
-    controls, exports = st.columns([1,1])
+    controls, exports = st.columns([1,1]) if tools is None else (tools,tools)
     with controls.popover("Figure controls",use_container_width=True):
         a,b,c=st.columns(3)
         style=a.selectbox("Style",["Digital","Publication"],key=key+"_style")
         lw=b.slider("Line width",1.,4.,2.,.25,key=key+"_lw")
-        height=c.slider("Viewer height",300,750,375,25,key=key+"_height")
+        height=c.slider("Viewer height",300,800,450,25,key=key+"_height")
         a,b=st.columns(2)
         legend=a.checkbox("Show legend",value=len(series)>1,key=key+"_legend")
         autoscale=b.checkbox("Auto Y scale",value=True,key=key+"_auto")
@@ -68,8 +68,8 @@ def spectrum_view(x, series, ylabel, key, mask=False):
         fig.add_trace(go.Scatter(x=x,y=y,name=label,mode="lines",line=dict(color=palette[i%len(palette)],width=lw*(1.333 if pub else 1),dash="solid" if i==0 else "dash"),connectgaps=False,hovertemplate="%{x:.2f} cm⁻¹<br>%{y:.6g}<extra>%{fullData.name}</extra>"))
     if show_mask: fig.add_vrect(x0=1500,x1=1700,fillcolor="#9DA9B3",opacity=.20,line_width=0,layer="below")
     axis=dict(showline=True,linecolor=fg,linewidth=2.67 if pub else 1.3,ticks="outside",ticklen=8 if pub else 5,tickwidth=2.67 if pub else 1,showgrid=False,zeroline=False,tickfont=dict(size=16 if pub else 13,family="DejaVu Sans",color=fg,weight=700 if pub else 400),nticks=6)
-    fig.update_layout(template="none",paper_bgcolor=bg,plot_bgcolor=bg,height=height,margin=dict(l=68,r=18,t=22,b=60),font=dict(family="DejaVu Sans",color=fg,size=16 if pub else 13),showlegend=legend,legend=dict(orientation="h",y=1.02,x=0,font=dict(size=14.67 if pub else 13,weight=700 if pub else 400)),xaxis=dict(**axis,title=dict(text="Wavenumber [cm⁻¹]",font=dict(size=20 if pub else 15,weight=700)),range=[limits[1],limits[0]]),yaxis=dict(**axis,title=dict(text=ylabel,font=dict(size=20 if pub else 15,weight=700)),range=list(yrange) if yrange else None,autorange=yrange is None),hovermode="x unified",dragmode="zoom")
-    st.plotly_chart(fig,use_container_width=True,config={"displaylogo":False,"scrollZoom":True,"responsive":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_view","scale":2}},key=key+"_chart")
+    fig.update_layout(template="none",paper_bgcolor=bg,plot_bgcolor=bg,height=height,margin=dict(l=76,r=18,t=38 if legend else 16,b=62),font=dict(family="DejaVu Sans",color=fg,size=16 if pub else 13),showlegend=legend,legend=dict(orientation="h",y=1.02,x=0,font=dict(size=14.67 if pub else 13,weight=700 if pub else 400,color=fg,family="DejaVu Sans")),xaxis=dict(**axis,title=dict(text="Wavenumber [cm⁻¹]",font=dict(size=20 if pub else 15,weight=700,color=fg,family="DejaVu Sans")),range=[limits[1],limits[0]]),yaxis=dict(**axis,title=dict(text=ylabel,font=dict(size=20 if pub else 15,weight=700,color=fg,family="DejaVu Sans")),range=list(yrange) if yrange else None,autorange=yrange is None),hovermode="x unified",dragmode="zoom")
+    st.plotly_chart(fig,use_container_width=True,theme=None,config={"displaylogo":False,"scrollZoom":True,"responsive":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_view","scale":2}},key=key+"_chart")
     with exports.popover("Export figure",use_container_width=True):
         st.caption("600 DPI · Figentra · selected axis range")
         fmt=st.selectbox("Format",["png","svg","pdf"],key=key+"_format")
