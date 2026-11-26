@@ -29,3 +29,18 @@ def test_navigation_without_model():
     for page in ["Batch analysis","Reference library","Farm monitoring","History","Settings","About","Analyzer"]:
         at.sidebar.radio[0].set_value(page).run()
         assert not at.exception, (page,at.exception)
+
+
+def test_downloaded_examples_round_trip():
+    import pandas as pd
+    from io import BytesIO
+    from demo_examples import example_csv,match_uploaded_example
+    g,examples=load_examples()
+    for ex in examples.values():
+        arr=pd.read_csv(BytesIO(example_csv(g,ex))).to_numpy(float)
+        match=match_uploaded_example(arr)
+        assert match is not None and match[1]["file"]==ex["file"]
+        assert match_uploaded_example(arr[::-1])[1]["file"]==ex["file"]
+        assert match_uploaded_example(arr,"percent absorbance") is None
+        arr[10,1]+=.001
+        assert match_uploaded_example(arr) is None
