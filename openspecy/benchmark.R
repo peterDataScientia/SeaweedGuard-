@@ -66,3 +66,15 @@ for (f in files) {
   write.csv(do.call(rbind,results),file.path(out,"matches_partial.csv"),row.names=FALSE)
 }
 write.csv(do.call(rbind,results),file.path(out,"matches.csv"),row.names=FALSE)
+
+# E13: preserve E11 outputs; run the common-reference stage separately.
+script_arg <- grep("^--file=",commandArgs(),value=TRUE)
+script_dir <- dirname(normalizePath(sub("^--file=","",script_arg[1])))
+tryCatch({
+  source(file.path(script_dir,"common_reference.R"),local=TRUE)
+  python <- Sys.which("python3")
+  stopifnot(nzchar(python))
+  status <- system2(python,c(shQuote(file.path(script_dir,"common_reference.py")),shQuote(out)))
+  if(status!=0) stop("Common-reference Python stage failed with code ",status)
+  message("E13 common-reference stage completed.")
+},error=function(e){message("E13 incomplete: ",conditionMessage(e));writeLines(conditionMessage(e),file.path(out,"E13_error.txt"))})
