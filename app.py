@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.2 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.3 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -23,7 +23,7 @@ with st.sidebar:
     st.divider()
     page=st.radio("WORKSPACE",["Analyzer","Batch analysis","Reference library","Farm monitoring","History","Settings","About"],index=0)
     st.divider()
-    st.caption("MODEL CONNECTION")
+    st.caption("MODEL")
     installed=BASE/"models/frozen_model.npz"
     uploaded=None if installed.exists() else st.file_uploader("Connect model",type=["npz"],key="model",help="Select the authorised E18 frozen model bundle.")
     raw=installed.read_bytes() if installed.exists() else uploaded.getvalue() if uploaded else None
@@ -32,16 +32,16 @@ with st.sidebar:
     if raw is not None:
         try: model=open_bundle(raw)
         except Exception as exc: model_error=str(exc)
-    if model is not None: st.success("Engine connected · 459 references")
+    if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
-    else: st.caption("No model connected")
-    st.caption("v0.2.2  /  E18 FROZEN")
+    else: st.caption("○ Not connected")
+    st.caption("v0.2.3  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
 titles={"Analyzer":("01 / SPECTRAL WORKSPACE","Spectrum analyzer"),"Batch analysis":("02 / HIGH-THROUGHPUT","Batch analysis"),"Reference library":("03 / REFERENCE SYSTEM","Reference library"),"Farm monitoring":("04 / FIELD WORKSPACE","Farm monitoring"),"History":("05 / SESSION RECORDS","Analysis history"),"Settings":("06 / CONFIGURATION","Instrument settings"),"About":("07 / DOCUMENTATION","Scientific documentation")}
 k,t=titles[page]
-status="ENGINE CONNECTED" if ready else "MODEL OFFLINE"
+status="LIVE ENGINE" if ready else "DEMO AVAILABLE" if page=="Analyzer" else "MODEL OFFLINE"
 st.markdown(f'<div class="sg-header"><div><div class="sg-kicker">{k}</div><div class="sg-title">{t}</div></div><div class="{"sg-online" if ready else "sg-offline"}">● {status}</div></div>',unsafe_allow_html=True)
 
 from spectral_figures import spectrum_view
@@ -60,7 +60,7 @@ def analyze_file(f,unit):
     return {"row":row,"signal":r["signal"],"grid":g,"query":query,"ref":ref,"ranking":ranking}
 
 def empty_view():
-    st.markdown('<div class="sg-empty"><div><strong>SPECTRAL VIEWER</strong>Import a spectrum to begin acquisition</div></div>',unsafe_allow_html=True)
+    st.markdown('<div class="sg-empty"><div><strong>SPECTRAL VIEWER</strong>No spectrum loaded</div></div>',unsafe_allow_html=True)
 
 def export_rows(rows,key):
     if rows:
@@ -79,8 +79,7 @@ if demo_mode:
             st.markdown("**DEMO ACQUISITION**")
             label=st.selectbox("Experimental sample",list(examples),key="demo_selected")
             example=examples[label]
-            st.caption("ATR-FTIR · absorbance · measured marine-exposed polymer")
-            st.caption("Mode: "+("Live frozen engine" if ready else "Recorded E18 replay"))
+            st.caption("LIVE" if ready else "REPLAY · E18")
             if st.button("Load example",use_container_width=True):
                 st.session_state.demo_loaded=label
                 st.session_state.pop("demo_result",None)
@@ -100,13 +99,7 @@ if demo_mode:
                 st.session_state.pop("demo_loaded",None)
                 st.session_state.pop("demo_result",None)
                 loaded=False
-            st.caption("[MicroPlastiX dataset](https://doi.org/10.22000/1820) · CC BY-SA 4.0")
-        with st.container(border=True):
-            st.markdown("**ENGINE PARAMETERS**")
-            st.caption("SG derivative · 11 / 2")
-            st.caption(f"Similarity ≥ {SIM:.6f}")
-            st.caption(f"Class margin ≥ {MARGIN:.6f}")
-            st.caption("Mask 1500–1700 cm⁻¹")
+            st.caption("[Data source](https://doi.org/10.22000/1820) · CC BY-SA 4.0")
     with right:
         if loaded:
             current=st.session_state.get("demo_result",{})
@@ -128,9 +121,8 @@ if demo_mode:
                 st.download_button("Export result",pd.DataFrame([{**result,"file":example["file"],"known_polymer":example["truth"]}]).to_csv(index=False),"demo_result.csv","text/csv",key="demo_result_csv")
                 with st.expander("Processing console"):
                     st.code(("LIVE | Frozen engine executed" if ready else "REPLAY | Original E18 recorded scores loaded")+"\\n"+status,language=None)
-            if not ready: st.caption("Replay displays recorded results, not new inference. Connect the frozen model for live screening.")
         else: empty_view()
-        st.caption("Examples are resampled to the E18 grid and rounded to five decimal places. Similarity is not probability.")
+        st.caption("Similarity ≠ probability · "+("Live screening" if ready else "Recorded results"))
 elif page in ("Analyzer","Batch analysis"):
     batch=page=="Batch analysis"
     left,right=st.columns([1,2.6],gap="large")
@@ -140,8 +132,7 @@ elif page in ("Analyzer","Batch analysis"):
             unit=st.selectbox("Intensity units",["absorbance","percent absorbance","percent transmittance"])
             files=st.file_uploader("Import FTIR CSV" if not batch else "Import FTIR spectra",type=["csv"],accept_multiple_files=batch,key="spectra_"+page)
             files=files if batch else ([files] if files else [])
-            st.caption("2 numeric columns · cm⁻¹ · header")
-            st.caption("ATR-FTIR only")
+            st.caption("ATR-FTIR CSV · cm⁻¹")
             run_key=hashlib.sha256(repr((page,model_id,unit,[(f.name,hashlib.sha256(f.getvalue()).hexdigest()) for f in files])).encode()).hexdigest()
             if st.button("▶  Analyze batch" if batch else "▶  Analyze spectrum",type="primary",use_container_width=True,disabled=not (ready and files)):
                 results=[];errors=[];logs=[]
@@ -156,13 +147,7 @@ elif page in ("Analyzer","Batch analysis"):
                         logs.append(f"ERROR | {f.name} | {exc}")
                     p.progress((i+1)/len(files),text=f"Processed {i+1} / {len(files)}")
                 st.session_state.runs[page]={"key":run_key,"results":results,"errors":errors,"logs":logs}
-            if not ready: st.caption("Connect the E18 model in the sidebar.")
-        with st.container(border=True):
-            st.markdown("**ENGINE PARAMETERS**")
-            st.caption("SG derivative · 11 / 2")
-            st.caption(f"Similarity ≥ {SIM:.6f}")
-            st.caption(f"Class margin ≥ {MARGIN:.6f}")
-            st.caption("Mask 1500–1700 cm⁻¹")
+            if not ready: st.caption("Model required")
     run=st.session_state.runs.get(page,{})
     current=run if run.get("key")==run_key else {}
     results=current.get("results",[])
@@ -201,7 +186,7 @@ elif page in ("Analyzer","Batch analysis"):
             else: st.caption("Import spectra and start batch analysis.")
         with st.expander("Processing console",expanded=bool(current)):
             st.code("\n".join(current.get("logs",[])) or "IDLE | Awaiting analysis",language=None)
-        st.caption("Similarity is not probability. Screening of isolated measured spectra; confirm candidates where required.")
+        st.caption("Similarity ≠ probability · isolated spectra only")
 elif page=="Reference library":
     if ready:
         g,a,y,ids=model
@@ -210,7 +195,7 @@ elif page=="Reference library":
         st.bar_chart(df["Polymer class"].value_counts())
         filter_class=st.selectbox("Polymer class",["All"]+sorted(set(y)))
         st.dataframe(df if filter_class=="All" else df[df["Polymer class"]==filter_class],hide_index=True,use_container_width=True)
-    else: st.info("Connect the frozen model to inspect the reference inventory.")
+    else: st.caption("Model required")
 elif page=="Farm monitoring":
     with st.form("farm"):
         c,d=st.columns(2)
@@ -225,14 +210,16 @@ elif page=="Farm monitoring":
     st.caption("Session-only records.")
 elif page=="History":
     export_rows(st.session_state.history,"history_export")
-    if not st.session_state.history: st.caption("No analyses recorded this session.")
+    if not st.session_state.history: st.caption("No analyses yet")
 elif page=="Settings":
     st.table(pd.DataFrame({"Parameter":["Model","References","Grid points","SG window","Polynomial order","Mask (cm⁻¹)","Similarity","Class margin"],"Value":["E18 frozen","459","750","11","2","1500–1700",str(SIM),str(MARGIN)]}))
-    st.caption("Read-only scientific parameters.")
+    st.caption("Locked parameters")
     if ready: st.code(model_id,language=None)
 else:
+    with st.expander("Quick start"):
+        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Connect the authorised model for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose measured intensity units before analysis. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
     st.markdown("**E18 / MicroPlastiX external validation**")
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.2 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.3 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
