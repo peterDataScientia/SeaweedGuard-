@@ -20,6 +20,10 @@ def test_demo_without_model():
     at.button(key="demo_run").click().run()
     assert not at.exception
     assert at.metric[0].value=="PP"
+    for unit in ["% Absorbance","% Transmittance","Absorbance"]:
+        at.selectbox(key="demo_0_display_unit").set_value(unit).run()
+        assert not at.exception
+        assert at.metric[0].value=="PP"
     at.button(key="demo_clear").click().run()
     assert not at.exception
     assert at.button(key="demo_run").disabled
@@ -42,5 +46,10 @@ def test_downloaded_examples_round_trip():
         assert match is not None and match[1]["file"]==ex["file"]
         assert match_uploaded_example(arr[::-1])[1]["file"]==ex["file"]
         assert match_uploaded_example(arr,"percent absorbance") is None
+        pct=arr.copy();pct[:,1]*=100
+        assert match_uploaded_example(pct,"percent absorbance")[1]["file"]==ex["file"]
+        if (arr[:,1]>=0).all():
+            trans=arr.copy();trans[:,1]=100*10**(-trans[:,1])
+            assert match_uploaded_example(trans,"percent transmittance")[1]["file"]==ex["file"]
         arr[10,1]+=.001
         assert match_uploaded_example(arr) is None
