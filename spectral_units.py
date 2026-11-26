@@ -18,7 +18,7 @@ def input_absorbance(signal, unit):
     if unit=="absorbance": return s.copy()
     if unit=="percent absorbance": return s/100
     if unit=="percent transmittance":
-        if np.any((s<=0)|(s>100)): raise ValueError("Transmittance must be > 0 and ≤ 100")
+        if np.any((s<=0)|(s>100)): raise ValueError("Invalid %T values. Check CSV input units in the acquisition panel.")
         return -np.log10(s/100)
     raise ValueError("Unknown CSV intensity unit")
 
@@ -29,3 +29,21 @@ def preview_spectrum(data,unit):
     a=a[np.argsort(a[:,0])]
     if np.any(np.diff(a[:,0])<=0): raise ValueError("Duplicate wavenumbers")
     return a[:,0],input_absorbance(a[:,1],unit)
+
+
+def detect_input_unit(header):
+    """Recognise explicit unit headers, not signal ranges."""
+    import re
+    text=str(header).strip().casefold()
+    compact=re.sub(r"[^a-z0-9%]","",text)
+    if compact in {"percentabsorbance","absorbancepercent","absorbance%","%absorbance","%a","a%","percenta","apct","absorbancepct"}:
+        return "percent absorbance"
+    if compact in {"percenttransmittance","transmittancepercent","transmittance%","%transmittance","%t","t%","percentt","tpct","transmittancepct","%transmission","transmission%"}:
+        return "percent transmittance"
+    if compact in {"absorbance","a","abs","absorbanceau","absorbancea","absorbanceod","opticaldensity","od"}:
+        return "absorbance"
+    return None
+
+def csv_input_unit(frame,fallback="absorbance"):
+    if frame.shape[1]!=2: raise ValueError("CSV requires two columns")
+    return detect_input_unit(frame.columns[1]) or fallback
