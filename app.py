@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.7 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.8 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -34,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.7  /  E18 FROZEN")
+    st.caption("v0.2.8  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -68,7 +68,7 @@ def export_rows(rows,key):
         st.download_button("Export CSV",df.to_csv(index=False).encode(),"seaweedguard_results.csv","text/csv",key=key)
 
 # Built-in examples remain available even without a connected reference bundle.
-from demo_examples import load_examples, demo_status
+from demo_examples import load_examples, demo_status, example_csv, match_uploaded_example
 demo_mode=page=="Analyzer" and st.radio("Acquisition source",["Built-in examples","Upload CSV"],horizontal=True,index=0,key="source_mode",label_visibility="collapsed")=="Built-in examples"
 if demo_mode:
     grid,examples=load_examples()
@@ -78,6 +78,7 @@ if demo_mode:
             st.markdown("**DEMO ACQUISITION**")
             label=st.selectbox("Sample",list(examples),key="demo_selected",label_visibility="collapsed")
             example=examples[label]
+            st.download_button("Download example CSV",example_csv(grid,example),"example_"+example["file"],"text/csv",key="demo_direct_download",use_container_width=True)
             if st.button("Load example",use_container_width=True):
                 st.session_state.demo_loaded=label
                 st.session_state.pop("demo_result",None)
@@ -112,7 +113,6 @@ if demo_mode:
             spectrum_view(grid,[("Measured example",example["signal"])],"Absorbance","demo_"+str(list(examples).index(label)),tools=figure_tools)
             with figure_tools.popover("Data & results",use_container_width=True):
                 st.caption(example["file"])
-                st.download_button("Example CSV",pd.DataFrame({"wavenumber":grid,"absorbance":example["signal"]}).to_csv(index=False),"example_"+example["file"],"text/csv",key="demo_csv")
                 if result:
                     st.download_button("Result CSV",pd.DataFrame([{**result,"file":example["file"],"known_polymer":example["truth"]}]).to_csv(index=False),"demo_result.csv","text/csv",key="demo_result_csv")
                     st.code(("LIVE | Frozen engine executed" if ready else "REPLAY | Original E18 recorded scores loaded")+"\n"+status,language=None)
@@ -126,14 +126,33 @@ elif page in ("Analyzer","Batch analysis"):
             unit=st.selectbox("Intensity units",["absorbance","percent absorbance","percent transmittance"])
             files=st.file_uploader("Import FTIR CSV" if not batch else "Import FTIR spectra",type=["csv"],accept_multiple_files=batch,key="spectra_"+page)
             files=files if batch else ([files] if files else [])
-            st.caption("ATR-FTIR CSV · cm⁻¹")
+            with st.popover("Download examples",use_container_width=True):
+                eg,ee=load_examples()
+                for i,(name,ex) in enumerate(ee.items()):
+                    st.download_button(name,example_csv(eg,ex),"example_"+ex["file"],"text/csv",key=f"upload_example_{page}_{i}",use_container_width=True)
+            replay={}
+            if not ready:
+                for i,f in enumerate(files):
+                    try:
+                        matched=match_uploaded_example(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),unit)
+                        if matched is not None: replay[i]=matched
+                    except (ValueError,TypeError,pd.errors.ParserError):
+                        pass
+            can_run=bool(files) and (ready or len(replay)==len(files))
             run_key=hashlib.sha256(repr((page,model_id,unit,[(f.name,hashlib.sha256(f.getvalue()).hexdigest()) for f in files])).encode()).hexdigest()
-            if st.button("▶  Analyze batch" if batch else "▶  Analyze spectrum",type="primary",use_container_width=True,disabled=not (ready and files)):
+            if st.button(("▶  Analyze batch" if batch else "▶  Analyze spectrum") if ready else "▶  Replay examples",type="primary",use_container_width=True,disabled=not can_run):
                 results=[];errors=[];logs=[]
                 p=st.progress(0,text="Starting analysis")
                 for i,f in enumerate(files):
                     try:
-                        item=analyze_file(f,unit)
+                        if ready:
+                            item=analyze_file(f,unit)
+                            item["row"]["mode"]="Live"
+                        else:
+                            eg,ex=replay[i]
+                            row={"file":f.name,"time":datetime.now().isoformat(timespec="seconds"),**{k:ex[k] for k in ("candidate","similarity","margin","accepted","reference_id")},"mode":"Recorded E18 replay"}
+                            row["status"]=demo_status(row)
+                            item={"row":row,"grid":eg,"signal":ex["signal"]}
                         results.append(item);st.session_state.history.append(item["row"])
                         logs.append(f"OK | {f.name} | {item['row']['status']}")
                     except Exception as exc:
@@ -141,7 +160,7 @@ elif page in ("Analyzer","Batch analysis"):
                         logs.append(f"ERROR | {f.name} | {exc}")
                     p.progress((i+1)/len(files),text=f"Processed {i+1} / {len(files)}")
                 st.session_state.runs[page]={"key":run_key,"results":results,"errors":errors,"logs":logs}
-            if not ready: st.caption("Connect model in Settings")
+            if not ready and not can_run: st.caption("Model required for other spectra")
         figure_tools=st.container()
     run=st.session_state.runs.get(page,{})
     current=run if run.get("key")==run_key else {}
@@ -156,7 +175,9 @@ elif page in ("Analyzer","Batch analysis"):
                 cols[1].metric("SIMILARITY",f"{r['similarity']:.4f}")
                 cols[2].metric("CLASS MARGIN",f"{r['margin']:.4f}")
                 st.caption("● Accepted candidate" if r["accepted"] else "● Non-target" if r["candidate"]=="Other" else "● Tentative · review")
-                view=st.radio("View",["Measured spectrum","Reference overlay","Ranked matches"],horizontal=True,label_visibility="collapsed",key="live_view")
+                recorded=r.get("mode")=="Recorded E18 replay"
+                if recorded: st.caption("Recorded result")
+                view="Measured spectrum" if recorded else st.radio("View",["Measured spectrum","Reference overlay","Ranked matches"],horizontal=True,label_visibility="collapsed",key="live_view")
                 if view=="Measured spectrum":
                     spectrum_view(item["grid"],[("Measured",item["signal"])],"Absorbance","raw",tools=figure_tools)
                 elif view=="Reference overlay":
@@ -221,10 +242,10 @@ elif page=="Settings":
     if ready: st.code(model_id,language=None)
 else:
     with st.expander("Quick start"):
-        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Connect the authorised model in Settings for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose measured intensity units before analysis. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
+        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Downloaded built-in examples can also be uploaded for recorded replay without a model. Connect the authorised model in Settings for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose measured intensity units before analysis. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
     st.markdown("**E18 / MicroPlastiX external validation**")
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.7 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.8 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
