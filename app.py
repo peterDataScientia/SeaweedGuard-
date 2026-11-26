@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.6 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.7 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -34,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.6  /  E18 FROZEN")
+    st.caption("v0.2.7  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -97,6 +97,7 @@ if demo_mode:
                 st.session_state.pop("demo_loaded",None)
                 st.session_state.pop("demo_result",None)
                 loaded=False
+        figure_tools=st.container()
     with right:
         if loaded:
             current=st.session_state.get("demo_result",{})
@@ -108,8 +109,8 @@ if demo_mode:
                 cols[2].metric("CLASS MARGIN",f'{result["margin"]:.4f}')
                 status=result["status"]
                 st.caption(("● Accepted" if result["accepted"] else "● Non-target" if result["candidate"]=="Other" else "● Tentative · review")+"  |  "+("Live" if ready else "Recorded result"))
-            spectrum_view(grid,[("Measured example",example["signal"])],"Absorbance","demo_"+str(list(examples).index(label)))
-            with st.popover("Data & results",use_container_width=True):
+            spectrum_view(grid,[("Measured example",example["signal"])],"Absorbance","demo_"+str(list(examples).index(label)),tools=figure_tools)
+            with figure_tools.popover("Data & results",use_container_width=True):
                 st.caption(example["file"])
                 st.download_button("Example CSV",pd.DataFrame({"wavenumber":grid,"absorbance":example["signal"]}).to_csv(index=False),"example_"+example["file"],"text/csv",key="demo_csv")
                 if result:
@@ -141,6 +142,7 @@ elif page in ("Analyzer","Batch analysis"):
                     p.progress((i+1)/len(files),text=f"Processed {i+1} / {len(files)}")
                 st.session_state.runs[page]={"key":run_key,"results":results,"errors":errors,"logs":logs}
             if not ready: st.caption("Connect model in Settings")
+        figure_tools=st.container()
     run=st.session_state.runs.get(page,{})
     current=run if run.get("key")==run_key else {}
     results=current.get("results",[])
@@ -154,16 +156,16 @@ elif page in ("Analyzer","Batch analysis"):
                 cols[1].metric("SIMILARITY",f"{r['similarity']:.4f}")
                 cols[2].metric("CLASS MARGIN",f"{r['margin']:.4f}")
                 st.caption("● Accepted candidate" if r["accepted"] else "● Non-target" if r["candidate"]=="Other" else "● Tentative · review")
-                a,b,c=st.tabs(["Measured spectrum","Reference overlay","Ranked matches"])
-                with a:
-                    spectrum_view(item["grid"],[("Measured",item["signal"])],"Absorbance","raw")
-                with b:
-                    spectrum_view(item["grid"],[("Query",item["query"]),("Nearest reference",item["ref"])],"Normalized first derivative","overlay",mask=True)
-                    with st.popover("Overlay data"):
+                view=st.radio("View",["Measured spectrum","Reference overlay","Ranked matches"],horizontal=True,label_visibility="collapsed",key="live_view")
+                if view=="Measured spectrum":
+                    spectrum_view(item["grid"],[("Measured",item["signal"])],"Absorbance","raw",tools=figure_tools)
+                elif view=="Reference overlay":
+                    spectrum_view(item["grid"],[("Query",item["query"]),("Nearest reference",item["ref"])],"Normalized first derivative","overlay",mask=True,tools=figure_tools)
+                    with figure_tools.popover("Overlay data",use_container_width=True):
                         st.download_button("Export CSV",pd.DataFrame({"wavenumber":item["grid"],"query":item["query"],"reference":item["ref"]}).to_csv(index=False),"overlay.csv","text/csv")
-                with c:
-                    st.dataframe(item["ranking"],height=330,hide_index=True,use_container_width=True,column_config={"Similarity":st.column_config.NumberColumn(format="%.4f")})
-                with st.popover("Result data"):
+                else:
+                    st.dataframe(item["ranking"],height=450,hide_index=True,use_container_width=True,column_config={"Similarity":st.column_config.NumberColumn(format="%.4f")})
+                with figure_tools.popover("Result data",use_container_width=True):
                     st.download_button("Export CSV",pd.DataFrame([r]).to_csv(index=False),"seaweedguard_result.csv","text/csv",key="single_export")
             else:
                 empty_view()
@@ -177,7 +179,7 @@ elif page in ("Analyzer","Batch analysis"):
             cols[2].metric("INPUT ERRORS",len(errors))
             if rows or errors: export_rows(rows+errors,"batch_export")
             else: st.caption("Import spectra and start batch analysis.")
-        with st.popover("Processing console"):
+        with figure_tools.popover("Processing console",use_container_width=True):
             st.code("\n".join(current.get("logs",[])) or "IDLE | Awaiting analysis",language=None)
 elif page=="Reference library":
     if ready:
@@ -225,4 +227,4 @@ else:
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.6 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.7 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
