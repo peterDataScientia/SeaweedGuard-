@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.5 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.6 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -25,8 +25,7 @@ with st.sidebar:
     st.divider()
     st.caption("MODEL")
     installed=BASE/"models/frozen_model.npz"
-    uploaded=None if installed.exists() else st.file_uploader("Connect model",type=["npz"],key="model",help="Select the authorised E18 frozen model bundle.")
-    raw=installed.read_bytes() if installed.exists() else uploaded.getvalue() if uploaded else None
+    raw=installed.read_bytes() if installed.exists() else st.session_state.get("connected_model_bytes")
     model=None
     model_error=None
     if raw is not None:
@@ -35,7 +34,7 @@ with st.sidebar:
     if model is not None: st.caption("● Connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("○ Not connected")
-    st.caption("v0.2.5  /  E18 FROZEN")
+    st.caption("v0.2.6  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -141,7 +140,7 @@ elif page in ("Analyzer","Batch analysis"):
                         logs.append(f"ERROR | {f.name} | {exc}")
                     p.progress((i+1)/len(files),text=f"Processed {i+1} / {len(files)}")
                 st.session_state.runs[page]={"key":run_key,"results":results,"errors":errors,"logs":logs}
-            if not ready: st.caption("Model required")
+            if not ready: st.caption("Connect model in Settings")
     run=st.session_state.runs.get(page,{})
     current=run if run.get("key")==run_key else {}
     results=current.get("results",[])
@@ -205,15 +204,25 @@ elif page=="History":
     export_rows(st.session_state.history,"history_export")
     if not st.session_state.history: st.caption("No analyses yet")
 elif page=="Settings":
+    if not installed.exists():
+        def connect_model():
+            selected=st.session_state.get("model_upload_"+str(st.session_state.get("model_upload_epoch",0)))
+            if selected is not None:
+                st.session_state.connected_model_bytes=selected.getvalue()
+        st.file_uploader("Connect model (.npz)",type=["npz"],key="model_upload_"+str(st.session_state.get("model_upload_epoch",0)),on_change=connect_model)
+        if raw is not None and st.button("Disconnect model",key="disconnect_model"):
+            st.session_state.pop("connected_model_bytes",None)
+            st.session_state.model_upload_epoch=st.session_state.get("model_upload_epoch",0)+1
+            st.rerun()
     st.table(pd.DataFrame({"Parameter":["Model","References","Grid points","SG window","Polynomial order","Mask (cm⁻¹)","Similarity","Class margin"],"Value":["E18 frozen","459","750","11","2","1500–1700",str(SIM),str(MARGIN)]}))
     st.caption("Locked parameters")
     if ready: st.code(model_id,language=None)
 else:
     with st.expander("Quick start"):
-        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Connect the authorised model for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose measured intensity units before analysis. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
+        st.write("Analyzer: select a built-in example, load it and run analysis. Without the model bundle, replay displays recorded E18 results; it does not execute new inference. Connect the authorised model in Settings for live analysis of uploaded CSVs (header, two numeric columns, wavenumber in cm⁻¹ and intensity). Choose measured intensity units before analysis. Examples are resampled to the E18 grid and rounded to five decimal places. Figure controls affect display/export only. Farm records and history are session-only.")
     st.markdown("**E18 / MicroPlastiX external validation**")
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.markdown("[Demo data source](https://doi.org/10.22000/1820) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) · [Attribution](https://github.com/peterDataScientia/SeaweedGuard-/blob/main/assets/DEMO_DATA_LICENSE.md)")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.5 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.6 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
