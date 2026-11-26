@@ -1,4 +1,4 @@
-"""SeaweedGuard v0.2.0 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.1 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
@@ -36,7 +36,7 @@ with st.sidebar:
     if model is not None: st.success("Engine connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("No model connected")
-    st.caption("v0.2.0  /  E18 FROZEN")
+    st.caption("v0.2.1  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -76,7 +76,70 @@ def export_rows(rows,key):
         st.dataframe(df,hide_index=True,use_container_width=True)
         st.download_button("Export CSV",df.to_csv(index=False).encode(),"seaweedguard_results.csv","text/csv",key=key)
 
-if page in ("Analyzer","Batch analysis"):
+# Built-in examples remain available even without a connected reference bundle.
+from demo_examples import load_examples, demo_status
+demo_mode=page=="Analyzer" and st.radio("Acquisition source",["Built-in examples","Upload CSV"],horizontal=True,index=0,key="source_mode")=="Built-in examples"
+if demo_mode:
+    grid,examples=load_examples()
+    left,right=st.columns([1,2.6],gap="large")
+    with left:
+        with st.container(border=True):
+            st.markdown("**DEMO ACQUISITION**")
+            label=st.selectbox("Experimental sample",list(examples),key="demo_selected")
+            example=examples[label]
+            st.caption("ATR-FTIR · absorbance · measured marine-exposed polymer")
+            st.caption("Mode: "+("Live frozen engine" if ready else "Recorded E18 replay"))
+            if st.button("Load example",use_container_width=True):
+                st.session_state.demo_loaded=label
+                st.session_state.pop("demo_result",None)
+            loaded=st.session_state.get("demo_loaded")==label
+            if st.button("▶  Analyze spectrum" if ready else "▶  Replay analysis",type="primary",use_container_width=True,disabled=not loaded,key="demo_run"):
+                if ready:
+                    if not np.allclose(grid,model[0],rtol=0,atol=.00051): st.error("Incompatible model grid");st.stop()
+                    rr=screen(np.column_stack([model[0],example["signal"]]),model)
+                    result={k:v for k,v in rr.items() if k!="signal"}
+                    result["mode"]="Live · rounded example"
+                else:
+                    result={k:example[k] for k in ("candidate","similarity","margin","accepted","reference_id")}
+                    result["status"]=demo_status(result)
+                    result["mode"]="Recorded E18 replay"
+                st.session_state.demo_result={"label":label,"model_id":model_id,"result":result}
+            if st.button("Clear",use_container_width=True,key="demo_clear"):
+                st.session_state.pop("demo_loaded",None)
+                st.session_state.pop("demo_result",None)
+                loaded=False
+            st.caption("[MicroPlastiX dataset](https://doi.org/10.22000/1820) · CC BY-SA 4.0")
+        with st.container(border=True):
+            st.markdown("**ENGINE PARAMETERS**")
+            st.caption("SG derivative · 11 / 2")
+            st.caption(f"Similarity ≥ {SIM:.6f}")
+            st.caption(f"Class margin ≥ {MARGIN:.6f}")
+            st.caption("Mask 1500–1700 cm⁻¹")
+    with right:
+        if loaded:
+            current=st.session_state.get("demo_result",{})
+            result=current.get("result") if current.get("label")==label and current.get("model_id")==model_id else None
+            if result:
+                cols=st.columns(3)
+                cols[0].metric("POLYMER CANDIDATE",result["candidate"])
+                cols[1].metric("SIMILARITY",f'{result["similarity"]:.4f}')
+                cols[2].metric("CLASS MARGIN",f'{result["margin"]:.4f}')
+                status=result["status"]
+                if result["accepted"]: st.success(status)
+                elif result["candidate"]=="Other": st.info(status)
+                else: st.warning(status)
+                st.caption(result["mode"]+" · Known sample: "+example["truth"])
+            st.plotly_chart(plot_spectrum(grid,[("Measured example",example["signal"])],"Absorbance"),use_container_width=True,config={"displaylogo":False,"scrollZoom":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_demo","scale":3}},key="demo_plot")
+            st.caption(example["file"])
+            st.download_button("Export example CSV",pd.DataFrame({"wavenumber":grid,"absorbance":example["signal"]}).to_csv(index=False),"example_"+example["file"],"text/csv",key="demo_csv")
+            if result:
+                st.download_button("Export result",pd.DataFrame([{**result,"file":example["file"],"known_polymer":example["truth"]}]).to_csv(index=False),"demo_result.csv","text/csv",key="demo_result_csv")
+                with st.expander("Processing console"):
+                    st.code(("LIVE | Frozen engine executed" if ready else "REPLAY | Original E18 recorded scores loaded")+"\\n"+status,language=None)
+            if not ready: st.caption("Replay displays recorded results, not new inference. Connect the frozen model for live screening.")
+        else: empty_view()
+        st.caption("Examples are resampled to the E18 grid and rounded to five decimal places. Similarity is not probability.")
+elif page in ("Analyzer","Batch analysis"):
     batch=page=="Batch analysis"
     left,right=st.columns([1,2.6],gap="large")
     with left:
@@ -182,4 +245,4 @@ else:
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.0 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.1 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
