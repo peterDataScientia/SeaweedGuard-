@@ -1,11 +1,10 @@
-"""SeaweedGuard v0.2.1 — spectral workstation. Frozen E18 engine unchanged."""
+"""SeaweedGuard v0.2.2 — spectral workstation. Frozen E18 engine unchanged."""
 import hashlib
 from io import BytesIO
 from pathlib import Path
 from datetime import datetime
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 from frozen_engine import load_model, screen, preprocess, CLASSES, SIM, MARGIN
 
@@ -36,7 +35,7 @@ with st.sidebar:
     if model is not None: st.success("Engine connected · 459 references")
     elif model_error: st.error("Model rejected: "+model_error)
     else: st.caption("No model connected")
-    st.caption("v0.2.1  /  E18 FROZEN")
+    st.caption("v0.2.2  /  E18 FROZEN")
 
 ready=model is not None
 model_id=hashlib.sha256(raw).hexdigest() if ready else None
@@ -45,14 +44,7 @@ k,t=titles[page]
 status="ENGINE CONNECTED" if ready else "MODEL OFFLINE"
 st.markdown(f'<div class="sg-header"><div><div class="sg-kicker">{k}</div><div class="sg-title">{t}</div></div><div class="{"sg-online" if ready else "sg-offline"}">● {status}</div></div>',unsafe_allow_html=True)
 
-def plot_spectrum(x,series,ylabel,mask=False):
-    fig=go.Figure()
-    colors=["#23d5c6","#e6ae66"]
-    for i,(label,values) in enumerate(series):
-        fig.add_trace(go.Scatter(x=x,y=values,name=label,mode="lines",line={"color":colors[i%2],"width":1.8},connectgaps=False))
-    if mask: fig.add_vrect(x0=1500,x1=1700,fillcolor="#7890a8",opacity=.12,line_width=0,annotation_text="Masked")
-    fig.update_layout(template="plotly_dark",paper_bgcolor="#0c1a29",plot_bgcolor="#0c1a29",height=420,margin=dict(l=58,r=20,t=22,b=55),font=dict(color="#c6dae9",size=12),legend=dict(orientation="h",y=1.02,x=0),xaxis=dict(title="Wavenumber (cm⁻¹)",autorange="reversed",gridcolor="#233b50"),yaxis=dict(title=ylabel,gridcolor="#233b50"),hovermode="x unified",dragmode="zoom")
-    return fig
+from spectral_figures import spectrum_view
 
 def analyze_file(f,unit):
     r=screen(pd.read_csv(BytesIO(f.getvalue())).to_numpy(float),model,unit)
@@ -129,7 +121,7 @@ if demo_mode:
                 elif result["candidate"]=="Other": st.info(status)
                 else: st.warning(status)
                 st.caption(result["mode"]+" · Known sample: "+example["truth"])
-            st.plotly_chart(plot_spectrum(grid,[("Measured example",example["signal"])],"Absorbance"),use_container_width=True,config={"displaylogo":False,"scrollZoom":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_demo","scale":3}},key="demo_plot")
+            spectrum_view(grid,[("Measured example",example["signal"])],"Absorbance","demo_"+str(list(examples).index(label)))
             st.caption(example["file"])
             st.download_button("Export example CSV",pd.DataFrame({"wavenumber":grid,"absorbance":example["signal"]}).to_csv(index=False),"example_"+example["file"],"text/csv",key="demo_csv")
             if result:
@@ -188,11 +180,9 @@ elif page in ("Analyzer","Batch analysis"):
                 else: st.warning("Tentative candidate · review required")
                 a,b=st.tabs(["Measured spectrum","Reference overlay"])
                 with a:
-                    fig=plot_spectrum(item["grid"],[("Measured",item["signal"])],"Absorbance")
-                    st.plotly_chart(fig,use_container_width=True,config={"displaylogo":False,"scrollZoom":True,"toImageButtonOptions":{"format":"png","filename":"seaweedguard_spectrum","scale":3}},key="rawplot")
+                    spectrum_view(item["grid"],[("Measured",item["signal"])],"Absorbance","raw")
                 with b:
-                    fig=plot_spectrum(item["grid"],[("Query",item["query"]),("Nearest reference",item["ref"])],"Normalized first derivative",True)
-                    st.plotly_chart(fig,use_container_width=True,config={"displaylogo":False,"scrollZoom":True},key="overlay")
+                    spectrum_view(item["grid"],[("Query",item["query"]),("Nearest reference",item["ref"])],"Normalized first derivative","overlay",mask=True)
                     st.download_button("Export overlay data",pd.DataFrame({"wavenumber":item["grid"],"query":item["query"],"reference":item["ref"]}).to_csv(index=False),"overlay.csv","text/csv")
                 st.markdown("**RANKED REFERENCE MATCHES**")
                 st.dataframe(item["ranking"],hide_index=True,use_container_width=True,column_config={"Similarity":st.column_config.NumberColumn(format="%.4f")})
@@ -245,4 +235,4 @@ else:
     st.write("DOI: 10.22000/1820 · 3,832 ATR-FTIR spectra.")
     st.table(pd.DataFrame({"Metric":["PP/PS target accuracy","Accepted target accuracy","Target coverage","Non-target rejection"],"Result":["1027/1203 (85.37%)","767/767 (100%)","767/1203 (63.76%)","2615/2629 (99.47%)"]}))
     st.write("Spectrum-level evaluation. Nylon and PVC were absent from the external dataset. Accepted target accuracy excludes 14 non-target false acceptances. Similarity is not probability. No direct seaweed-tissue, concentration, source-attribution or food-safety validation. The model bundle is supplied separately pending reference-data licence review.")
-st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.1 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
+st.markdown('<div class="sg-foot">SEAWEEDGUARD / 0.2.2 &nbsp;·&nbsp; ATR-FTIR &nbsp;·&nbsp; E18 FROZEN ENGINE</div>',unsafe_allow_html=True)
