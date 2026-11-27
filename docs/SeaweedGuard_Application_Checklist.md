@@ -3,6 +3,8 @@
 **Application deadline:** 15 December 2026  
 **[Official application form](https://forms.gle/HNQ1jZn7He49jcn58)**
 
+**[Open interactive checklist](https://github.com/peterDataScientia/SeaweedGuard-/issues/1)** — Tick or untick tasks in the GitHub issue to save progress. The list below is the initial snapshot; the issue is the live tracker.
+
 ## 1. Application preparation
 
 - [x] [SeaweedGuard MVP v1.0.0](https://seaweedguard.streamlit.app/)
